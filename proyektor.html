@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📺 Proyektor Buzzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0f1e;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-card-hover: #243447;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #facc15;
+            --accent-glow: rgba(250, 204, 21, 0.3);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.3);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.3);
+            --primary: #6366f1;
+            --border: #1e293b;
+            --radius: 20px;
+            --radius-sm: 12px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background: var(--bg-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            user-select: none;
+        }
+
+        /* ===== CONNECT FORM ===== */
+        #connectForm {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+        }
+
+        #connectForm.hidden {
+            display: none;
+        }
+
+        .connect-card {
+            background: var(--bg-secondary);
+            padding: 48px 40px;
+            border-radius: var(--radius);
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            animation: fadeUp 0.6s ease-out;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .connect-card .logo {
+            font-size: 3.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .connect-card h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .connect-card .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+        }
+
+        .connect-card .input-group {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .connect-card .input-group .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            opacity: 0.5;
+        }
+
+        .connect-card input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-family: inherit;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .connect-card input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .connect-card input::placeholder {
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        .connect-card .checkbox-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 0 16px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .connect-card .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .btn-connect {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-connect:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .connect-status {
+            margin-top: 14px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            min-height: 24px;
+        }
+
+        .connect-status .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .connect-status .dot.connecting { background: var(--accent); }
+        .connect-status .dot.error { background: var(--danger); animation: none; }
+        .connect-status .dot.success { background: var(--success); animation: none; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .connect-status .text { vertical-align: middle; }
+        .connect-status .text.error { color: var(--danger); }
+        .connect-status .text.success { color: var(--success); }
+
+        /* ===== MAIN DISPLAY ===== */
+        #display {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            padding: 20px 30px 30px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #display.active {
+            display: flex;
+        }
+
+        /* Background effect */
+        #display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(250, 204, 21, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== HEADER ===== */
+        .projector-header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 16px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .projector-header .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .projector-header .left .icon {
+            font-size: 1.8rem;
+        }
+
+        .projector-header .left .title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .projector-header .left .title span {
+            color: var(--accent);
+        }
+
+        .projector-header .right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .projector-header .right .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .projector-header .right .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .projector-header .right .status-badge .dot.online {
+            background: var(--success);
+            box-shadow: 0 0 12px var(--success-glow);
+        }
+
+        .projector-header .right .status-badge .dot.offline {
+            background: var(--danger);
+            box-shadow: 0 0 12px var(--danger-glow);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .projector-header .right .room-code {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            background: var(--bg-card);
+            padding: 4px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .projector-header .right .room-code span {
+            color: var(--accent);
+        }
+
+        /* ===== TIMER ===== */
+        .timer-section {
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+            padding: 6px 0 10px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        #timerDisplay {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 4px;
+            min-height: 80px;
+            display: none;
+            text-shadow: 0 0 40px var(--accent-glow);
+            transition: all 0.3s;
+        }
+
+        #timerDisplay.visible {
+            display: block;
+        }
+
+        #timerDisplay.warning {
+            color: #f59e0b;
+            text-shadow: 0 0 40px rgba(245, 158, 11, 0.3);
+        }
+
+        #timerDisplay.danger {
+            color: var(--danger);
+            text-shadow: 0 0 40px var(--danger-glow);
+            animation: pulse-timer 0.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-timer {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.03); }
+        }
+
+        #timerDisplay .label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            display: block;
+            margin-top: -4px;
+        }
+
+        /* ===== QUEUE ===== */
+        .queue-section {
+            width: 100%;
+            max-width: 900px;
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            z-index: 1;
+            padding: 8px 0;
+            overflow: hidden;
+        }
+
+        #queueDisplay {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 4px 8px;
+        }
+
+        #queueDisplay::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #queueDisplay::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #queueDisplay::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .queue-item {
+            background: var(--bg-card);
+            border-radius: 60px;
+            padding: 12px 24px;
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .queue-item.first {
+            background: linear-gradient(135deg, #065f46, #0d9488);
+            border-color: var(--success);
+            box-shadow: 0 0 40px var(--success-glow);
+            transform: scale(1.02);
+            padding: 16px 28px;
+            margin: 8px 0;
+        }
+
+        .queue-item .rank {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 50px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .queue-item.first .rank {
+            color: #a7f3d0;
+            font-size: 1.4rem;
+        }
+
+        .queue-item .rank .medal {
+            font-size: 1.4rem;
+        }
+
+        .queue-item .name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+            padding: 0 16px;
+        }
+
+        .queue-item.first .name {
+            font-size: 1.6rem;
+            color: white;
+        }
+
+        .queue-item .time {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .queue-item.first .time {
+            color: #a7f3d0;
+        }
+
+        .queue-empty {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            padding: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .queue-empty .icon {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+
+        /* ===== QUESTION ===== */
+        #questionDisplay {
+            width: 100%;
+            max-width: 900px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px 32px;
+            border: 2px solid var(--border);
+            margin: 8px 0 12px;
+            display: none;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        #questionDisplay.active {
+            display: block;
+            border-color: var(--primary);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #questionDisplay .q-target {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #questionDisplay .q-target .highlight {
+            color: var(--accent);
+        }
+
+        #questionDisplay .q-text {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin-bottom: 14px;
+        }
+
+        #questionDisplay .q-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        #questionDisplay .q-options .opt {
+            background: var(--bg-primary);
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        #questionDisplay .q-status {
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            text-align: center;
+        }
+
+        #questionDisplay .q-status.correct {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+        }
+
+        #questionDisplay .q-status.wrong {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+        }
+
+        #questionDisplay .q-status .q-answerer {
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        /* ===== SCORES ===== */
+        .scores-section {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+            margin-top: 8px;
+        }
+
+        #scoresDisplay {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            display: none; /* default sembunyi, hanya tampil jika host aktifkan */
+        }
+
+        #scoresDisplay.visible {
+            display: block;
+        }
+
+        #scoresDisplay .scores-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #scoresDisplay .scores-header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #scoresDisplay .scores-header .count {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+
+        #scoresList {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        #scoresList::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #scoresList::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 1.05rem;
+            transition: all 0.3s;
+        }
+
+        .score-item:last-child {
+            border-bottom: none;
+        }
+
+        .score-item .sname {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-item .sname .rank-num {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-width: 24px;
+        }
+
+        .score-item .sname .medal {
+            font-size: 1.1rem;
+        }
+
+        .score-item .sscore {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .score-item.top1 .sname { color: var(--accent); font-weight: 700; }
+        .score-item.top1 .sscore { color: var(--accent); font-size: 1.3rem; }
+        .score-item.top2 .sscore { color: #94a3b8; }
+        .score-item.top3 .sscore { color: #d97706; }
+
+        .score-empty {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 16px 0;
+        }
+
+        /* ===== RECONNECT INDICATOR ===== */
+        #reconnectIndicator {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            color: var(--accent);
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 100;
+            display: none;
+            border: 1px solid var(--accent);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        #reconnectIndicator.active {
+            display: block;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ===== STATUS BAR ===== */
+        #projectorStatus {
+            position: fixed;
+            bottom: 16px;
+            right: 24px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            background: var(--bg-card);
+            padding: 4px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #projectorStatus .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        #projectorStatus .dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 12px var(--success-glow);
+        }
+
+        #projectorStatus .dot.disconnected {
+            background: var(--danger);
+            box-shadow: 0 0 12px var(--danger-glow);
+        }
+
+        /* ===== SCROLLBAR GLOBAL ===== */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #display { padding: 12px 16px 20px; }
+            #timerDisplay { font-size: 3rem; min-height: 60px; }
+            .queue-item { padding: 8px 16px; border-radius: 40px; }
+            .queue-item .name { font-size: 1rem; padding: 0 10px; }
+            .queue-item.first .name { font-size: 1.2rem; }
+            .queue-item .rank { font-size: 0.9rem; min-width: 36px; }
+            .queue-item .rank .medal { font-size: 1rem; }
+            #questionDisplay .q-text { font-size: 1.4rem; }
+            #questionDisplay { padding: 16px 20px; }
+            #questionDisplay .q-options .opt { font-size: 0.9rem; padding: 6px 14px; }
+            .projector-header .left .title { font-size: 0.9rem; }
+            .projector-header .left .icon { font-size: 1.3rem; }
+            .connect-card { padding: 32px 24px; margin: 16px; }
+            #scoresDisplay .scores-header h2 { font-size: 0.9rem; }
+            .score-item { font-size: 0.9rem; padding: 4px 8px; }
+            #scoresList { max-height: 80px; }
+            #projectorStatus { font-size: 0.6rem; padding: 3px 12px; bottom: 10px; right: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            #display { padding: 8px 10px 16px; }
+            #timerDisplay { font-size: 2.4rem; min-height: 48px; }
+            .queue-item { padding: 6px 12px; border-radius: 30px; margin: 4px 0; }
+            .queue-item .name { font-size: 0.85rem; }
+            .queue-item.first .name { font-size: 1rem; }
+            .queue-item .rank { font-size: 0.75rem; min-width: 30px; }
+            .queue-item .rank .medal { font-size: 0.85rem; }
+            .queue-item .time { font-size: 0.65rem; }
+            #questionDisplay .q-text { font-size: 1.1rem; }
+            #questionDisplay { padding: 12px 14px; margin: 4px 0; }
+            #questionDisplay .q-options .opt { font-size: 0.75rem; padding: 4px 10px; }
+            #questionDisplay .q-status { font-size: 0.9rem; padding: 6px 12px; }
+            .projector-header { padding: 4px 0 10px; }
+            .projector-header .left .title { font-size: 0.75rem; }
+            .projector-header .left .icon { font-size: 1rem; }
+            .projector-header .right .room-code { font-size: 0.6rem; padding: 2px 10px; }
+            .projector-header .right .status-badge { font-size: 0.6rem; padding: 2px 10px; }
+            .scores-section { margin-top: 4px; }
+            #scoresDisplay { padding: 10px 12px; }
+            #scoresDisplay .scores-header h2 { font-size: 0.75rem; }
+            .score-item { font-size: 0.75rem; padding: 3px 6px; }
+            #scoresList { max-height: 60px; }
+            .connect-card { padding: 24px 16px; }
+            .connect-card h2 { font-size: 1.2rem; }
+            .connect-card .logo { font-size: 2.5rem; }
+            .connect-card input { font-size: 0.9rem; padding: 10px 12px 10px 36px; }
+        }
+
+        /* ===== UTILITY ===== */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .flex-1 { flex: 1; }
+        .flex-shrink-0 { flex-shrink: 0; }
+        .overflow-hidden { overflow: hidden; }
+
+        /* ===== TOAST ===== */
+        #toastMessage {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            box-shadow: var(--shadow-lg);
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            max-width: 90%;
+            pointer-events: none;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        #toastMessage.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toastMessage.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        #toastMessage.success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <!-- CONNECT FORM -->
+    <div id="connectForm">
+        <div class="connect-card">
+            <span class="logo">📺</span>
+            <h2>Proyektor</h2>
+            <p class="subtitle">Tampilkan antrian, soal, dan skor</p>
+            <div class="input-group">
+                <span class="icon">🔑</span>
+                <input type="text" id="hostIdInput" placeholder="Masukkan ID Host" maxlength="9" autofocus />
+            </div>
+            <label class="checkbox-group">
+                <input type="checkbox" id="showAllQuestions" checked />
+                <span>Tampilkan semua soal</span>
+            </label>
+            <button id="connectBtn" class="btn-connect">🔗 Hubungkan</button>
+            <div class="connect-status" id="status">
+                <span class="dot connecting"></span>
+                <span class="text">Masukkan ID host untuk terhubung</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECONNECT INDICATOR -->
+    <div id="reconnectIndicator">⏳ Mencoba menghubungkan ulang...</div>
+
+    <!-- MAIN DISPLAY -->
+    <div id="display">
+        <!-- Header -->
+        <div class="projector-header">
+            <div class="left">
+                <span class="icon">📺</span>
+                <span class="title">CCGIVANS <span>PROYEKTOR</span></span>
+            </div>
+            <div class="right">
+                <div class="status-badge">
+                    <span class="dot online" id="headerDot"></span>
+                    <span id="headerStatus">Online</span>
+                </div>
+                <div class="room-code">
+                    🏠 <span id="roomCodeDisplay">---</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-section">
+            <div id="timerDisplay">
+                <span id="timerValue">--</span>
+                <span class="label">⏱ Waktu Tersisa</span>
+            </div>
+        </div>
+
+        <!-- Queue -->
+        <div class="queue-section">
+            <div id="queueDisplay">
+                <div class="queue-empty">
+                </div>
+            </div>
+        </div>
+
+        <!-- Question -->
+        <div id="questionDisplay">
+            <div class="q-target" id="qTarget">🌍 Global</div>
+            <div class="q-text" id="qText">Soal</div>
+            <div class="q-options" id="qOptions"></div>
+            <div class="q-status" id="qStatus">⏳ Menunggu jawaban...</div>
+        </div>
+
+        <!-- Scores (default sembunyi) -->
+        <div class="scores-section">
+            <div id="scoresDisplay">
+                <div class="scores-header">
+                    <h2>⭐ Skor Peserta</h2>
+                    <span class="count" id="scoreCount">0</span>
+                </div>
+                <div id="scoresList">
+                    <div class="score-empty">Belum ada skor</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status -->
+    <div id="projectorStatus">
+        <span class="dot disconnected" id="statusDot"></span>
+        <span id="statusText">Menunggu koneksi...</span>
+    </div>
+
+    <!-- Toast -->
+    <div id="toastMessage"></div>
+
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <script>
+        // ============================================================
+        //  PROYEKTOR – FULL SCREEN VERSION (tidak ada Chat)
+        // ============================================================
+
+        // ---- STATE ----
+        let peer = null;
+        let connection = null;
+        let connected = false;
+        let currentQuestion = null;
+        let reconnectAttempts = 0;
+        let maxReconnectAttempts = 10;
+        let reconnectTimer = null;
+        let isReconnecting = false;
+        let timerInterval = null;
+        let roomCode = '';
+
+        // ---- DOM REFS ----
+        const connectForm = document.getElementById('connectForm');
+        const hostIdInput = document.getElementById('hostIdInput');
+        const connectBtn = document.getElementById('connectBtn');
+        const statusDiv = document.getElementById('status');
+        const displayDiv = document.getElementById('display');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerValue = document.getElementById('timerValue');
+        const queueDisplay = document.getElementById('queueDisplay');
+        const questionDisplay = document.getElementById('questionDisplay');
+        const qText = document.getElementById('qText');
+        const qOptions = document.getElementById('qOptions');
+        const qStatus = document.getElementById('qStatus');
+        const qTarget = document.getElementById('qTarget');
+        const scoresList = document.getElementById('scoresList');
+        const scoreCount = document.getElementById('scoreCount');
+        const scoresDisplay = document.getElementById('scoresDisplay');
+        const projectorStatus = document.getElementById('projectorStatus');
+        const statusText = document.getElementById('statusText');
+        const statusDot = document.getElementById('statusDot');
+        const headerDot = document.getElementById('headerDot');
+        const headerStatus = document.getElementById('headerStatus');
+        const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+        const showAllQuestions = document.getElementById('showAllQuestions');
+        const reconnectIndicator = document.getElementById('reconnectIndicator');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // ---- HELPER ----
+        function sanitize(s) {
+            const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;','/':'&#x2F;'};
+            return String(s).replace(/[&<>"'/]/g, m=>map[m]);
+        }
+
+        function formatTime(sec) {
+            if (sec < 0) sec = 0;
+            const m = Math.floor(sec/60);
+            const s = Math.floor(sec%60);
+            return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        }
+
+        function isValidRoomCode(code) {
+            return /^[A-Z0-9]{2}-[A-Z0-9]{3}-[A-Z0-9]{2}$/.test(code);
+        }
+
+        function showToast(msg, duration = 2500, type = '') {
+            toastMessage.textContent = msg;
+            toastMessage.className = 'show ' + type;
+            clearTimeout(toastMessage._hideTimer);
+            toastMessage._hideTimer = setTimeout(() => {
+                toastMessage.className = '';
+            }, duration);
+        }
+
+        function showError(msg, duration = 3000) {
+            showToast('❌ ' + msg, duration, 'error');
+        }
+
+        // ---- UI UPDATE FUNCTIONS ----
+        function updateQueue(queueData) {
+            if (!queueData || queueData.length === 0) {
+                queueDisplay.innerHTML = `
+                    <div class="queue-empty">
+                        
+                    </div>
+                `;
+                return;
+            }
+            let html = '';
+            queueData.forEach((item, idx) => {
+                const pos = idx + 1;
+                const isFirst = (pos === 1);
+                const cls = isFirst ? 'queue-item first' : 'queue-item';
+                const medal = isFirst ? '🏆' : (pos === 2 ? '🥈' : (pos === 3 ? '🥉' : '#'));
+                const rankDisplay = isFirst ? medal : (pos <= 3 ? medal : '#' + pos);
+                html += `
+                    <div class="${cls}" style="animation-delay: ${idx * 0.05}s">
+                        <span class="rank">
+                            <span class="medal">${rankDisplay}</span>
+                        </span>
+                        <span class="name">${sanitize(item.name)}</span>
+                        <span class="time">${item.time || ''}</span>
+                    </div>
+                `;
+            });
+            queueDisplay.innerHTML = html;
+        }
+
+        function updateTimer(seconds) {
+            if (seconds > 0) {
+                timerValue.textContent = formatTime(seconds);
+                timerDisplay.className = 'visible';
+                if (seconds <= 5) {
+                    timerDisplay.classList.add('danger');
+                } else if (seconds <= 10) {
+                    timerDisplay.classList.add('warning');
+                }
+            } else {
+                timerDisplay.className = '';
+                timerDisplay.style.display = 'none';
+                setTimeout(() => {
+                    timerDisplay.style.display = '';
+                }, 100);
+            }
+        }
+
+        function updateQuestion(question) {
+            currentQuestion = question;
+            if (!question) {
+                questionDisplay.classList.remove('active');
+                return;
+            }
+            questionDisplay.classList.add('active');
+            qText.textContent = question.text;
+            if (question.target) {
+                qTarget.innerHTML = '🎯 Untuk: <span class="highlight">' + sanitize(question.target) + '</span>';
+            } else {
+                qTarget.textContent = '🌍 Soal Global';
+            }
+            if (question.type === 'pilihan_ganda' && question.options && question.options.length) {
+                let html = '';
+                const letters = ['A','B','C','D','E','F'];
+                question.options.forEach((opt, i) => {
+                    html += `<span class="opt">${letters[i] || (i+1)}. ${sanitize(opt)}</span>`;
+                });
+                qOptions.innerHTML = html;
+            } else {
+                qOptions.innerHTML = '';
+            }
+            if (question.answered) {
+                const correctText = question.isCorrect ? '✅ Benar' : '❌ Salah';
+                qStatus.innerHTML = `<span class="q-answerer">${sanitize(question.answerer || '')}</span> menjawab: ${correctText} (${question.points} poin)`;
+                qStatus.className = question.isCorrect ? 'q-status correct' : 'q-status wrong';
+            } else {
+                qStatus.textContent = '⏳ Menunggu jawaban...';
+                qStatus.className = 'q-status';
+            }
+        }
+
+        function updateScores(scores) {
+            const names = Object.keys(scores || {});
+            if (names.length === 0) {
+                scoresList.innerHTML = '<div class="score-empty">Belum ada skor</div>';
+                scoreCount.textContent = '0';
+                return;
+            }
+            names.sort((a,b) => (scores[b]||0) - (scores[a]||0));
+            let html = '';
+            names.forEach((name, idx) => {
+                const score = scores[name] || 0;
+                let cls = '';
+                let medal = '';
+                if (idx === 0) { cls = 'top1'; medal = '🏆'; }
+                else if (idx === 1) { cls = 'top2'; medal = '🥈'; }
+                else if (idx === 2) { cls = 'top3'; medal = '🥉'; }
+                html += `
+                    <div class="score-item ${cls}">
+                        <span class="sname">
+                            <span class="rank-num">${idx+1}</span>
+                            ${medal ? `<span class="medal">${medal}</span>` : ''}
+                            ${sanitize(name)}
+                        </span>
+                        <span class="sscore">${score}</span>
+                    </div>
+                `;
+            });
+            scoresList.innerHTML = html;
+            scoreCount.textContent = names.length;
+        }
+
+        function updateConnectionStatus(online) {
+            const dotClass = online ? 'connected' : 'disconnected';
+            statusDot.className = 'dot ' + dotClass;
+            headerDot.className = 'dot ' + (online ? 'online' : 'offline');
+            statusText.textContent = online ? 'Terhubung' : 'Terputus';
+            headerStatus.textContent = online ? 'Online' : 'Offline';
+        }
+
+        function setStatus(text, type = 'info') {
+            const dot = statusDiv.querySelector('.dot');
+            const textEl = statusDiv.querySelector('.text');
+            dot.className = 'dot ' + (type === 'connecting' ? 'connecting' : (type === 'error' ? 'error' : 'success'));
+            textEl.className = 'text ' + (type === 'error' ? 'error' : (type === 'success' ? 'success' : ''));
+            textEl.textContent = text;
+        }
+
+        // ---- HANDLE INCOMING DATA ----
+        function handleData(data) {
+            console.log('📨 Data dari host:', data);
+            if (data.type === 'queueUpdate') {
+                updateQueue(data.queue);
+                return;
+            }
+            if (data.type === 'timerUpdate') {
+                updateTimer(data.remaining);
+                return;
+            }
+            if (data.type === 'timerGlobalStart' || data.type === 'timerStart') {
+                const start = data.startTime;
+                const duration = data.duration;
+                const now = Date.now();
+                const elapsed = (now - start) / 1000;
+                const remaining = Math.max(0, duration - elapsed);
+                updateTimer(Math.ceil(remaining));
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    const newElapsed = (Date.now() - start) / 1000;
+                    const newRemaining = Math.max(0, duration - newElapsed);
+                    updateTimer(Math.ceil(newRemaining));
+                    if (newRemaining <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        timerValue.textContent = '⏰ HABIS!';
+                        timerDisplay.className = 'visible danger';
+                        setTimeout(() => {
+                            timerDisplay.className = '';
+                            timerDisplay.style.display = 'none';
+                            setTimeout(() => { timerDisplay.style.display = ''; }, 100);
+                        }, 4000);
+                    }
+                }, 200);
+                return;
+            }
+            if (data.type === 'timerGlobalStop' || data.type === 'timerStop' || data.type === 'timerGlobalEnd' || data.type === 'timerEnd') {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                updateTimer(0);
+                return;
+            }
+            if (data.type === 'showQuestion') {
+                const showAll = showAllQuestions.checked;
+                if (data.target && !showAll) {
+                    return;
+                }
+                const question = data.question;
+                question.target = data.target || null;
+                updateQuestion(question);
+                return;
+            }
+            if (data.type === 'questionEnd') {
+                updateQuestion(null);
+                return;
+            }
+            if (data.type === 'questionResult') {
+                if (currentQuestion && currentQuestion.id === data.questionId) {
+                    currentQuestion.answered = true;
+                    currentQuestion.answerer = data.answerer;
+                    currentQuestion.isCorrect = data.correct;
+                    currentQuestion.points = data.points;
+                    updateQuestion(currentQuestion);
+                }
+                return;
+            }
+            if (data.type === 'scoreUpdate') {
+                updateScores(data.scores);
+                return;
+            }
+            if (data.type === 'reset' || data.type === 'babakReset') {
+                updateQueue([]);
+                updateTimer(0);
+                updateQuestion(null);
+                return;
+            }
+            if (data.type === 'toggleVisibility' && data.target === 'projectorScores') {
+                if (data.visible) {
+                    scoresDisplay.classList.add('visible');
+                } else {
+                    scoresDisplay.classList.remove('visible');
+                }
+                return;
+            }
+            if (data.type === 'ping') {
+                if (connection) connection.send({ type: 'pong' });
+                return;
+            }
+            if (data.type === 'registered') {
+                // Proyektor tidak perlu registrasi
+                return;
+            }
+        }
+
+        // ---- RECONNECT ----
+        function startReconnect(hostId) {
+            if (isReconnecting) return;
+            if (reconnectAttempts >= maxReconnectAttempts) {
+                setStatus('❌ Gagal terhubung setelah 10 kali percobaan. Refresh halaman.', 'error');
+                connectForm.classList.remove('hidden');
+                displayDiv.classList.remove('active');
+                updateConnectionStatus(false);
+                reconnectIndicator.classList.remove('active');
+                isReconnecting = false;
+                return;
+            }
+            isReconnecting = true;
+            reconnectAttempts++;
+            const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts), 30000);
+            
+            setStatus(`⏳ Mencoba ulang (${reconnectAttempts}/${maxReconnectAttempts})...`, 'connecting');
+            reconnectIndicator.textContent = `⏳ Menghubungkan ulang (${reconnectAttempts}/${maxReconnectAttempts})...`;
+            reconnectIndicator.classList.add('active');
+            
+            reconnectTimer = setTimeout(() => {
+                if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+                connection = null;
+                connectToHost(hostId);
+                isReconnecting = false;
+            }, delay);
+        }
+
+        function stopReconnect() {
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            isReconnecting = false;
+            reconnectIndicator.classList.remove('active');
+        }
+
+        // ---- CONNECT TO HOST ----
+        function connectToHost(hostId) {
+            if (peer) {
+                try { peer.destroy(); } catch(e) {}
+                peer = null;
+            }
+            console.log('🔌 Menghubungkan ke host:', hostId);
+            setStatus('⏳ Menghubungkan...', 'connecting');
+            connectBtn.disabled = true;
+            roomCode = hostId;
+            roomCodeDisplay.textContent = hostId;
+            
+            peer = new Peer({
+                debug: 3,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+                        { urls: 'turn:turn.anyfirewall.com:443?transport=tcp', username: 'webrtc', credential: 'webrtc' },
+                        { urls: 'turn:turn.anyfirewall.com:80?transport=udp', username: 'webrtc', credential: 'webrtc' }
+                    ]
+                }
+            });
+
+            const connTimeout = setTimeout(() => {
+                if (peer && !connection) {
+                    showError('Koneksi timeout. Pastikan host aktif.');
+                    setStatus('❌ Timeout koneksi', 'error');
+                    connectBtn.disabled = false;
+                    if (!isReconnecting) startReconnect(hostId);
+                }
+            }, 15000);
+
+            peer.on('open', (id) => {
+                clearTimeout(connTimeout);
+                console.log('✅ Peer open, ID saya:', id);
+                setStatus('🔄 Menghubungkan ke host...', 'connecting');
+                const conn = peer.connect(hostId, { reliable: true });
+                connection = conn;
+
+                const connOpenTimeout = setTimeout(() => {
+                    if (conn && conn.open === false) {
+                        showError('Koneksi ke host gagal (timeout)');
+                        setStatus('❌ Timeout koneksi', 'error');
+                        connectBtn.disabled = false;
+                        if (!isReconnecting) startReconnect(hostId);
+                    }
+                }, 8000);
+
+                conn.on('open', () => {
+                    clearTimeout(connOpenTimeout);
+                    connected = true;
+                    reconnectAttempts = 0;
+                    stopReconnect();
+                    setStatus('✅ Terhubung!', 'success');
+                    connectForm.classList.add('hidden');
+                    displayDiv.classList.add('active');
+                    updateConnectionStatus(true);
+                    connectBtn.disabled = false;
+                    conn.send({ type: 'registerProjector' });
+                    console.log('🔗 Koneksi terbuka, mengirim registerProjector');
+                    
+                    // Request initial data
+                    conn.send({ type: 'syncRequest' });
+                });
+
+                conn.on('data', (data) => {
+                    handleData(data);
+                });
+
+                conn.on('close', () => {
+                    connected = false;
+                    setStatus('❌ Koneksi terputus. Menghubungkan ulang...', 'error');
+                    connectForm.classList.remove('hidden');
+                    displayDiv.classList.remove('active');
+                    updateConnectionStatus(false);
+                    connectBtn.disabled = false;
+                    if (!isReconnecting) startReconnect(hostId);
+                    console.warn('🔌 Koneksi ditutup');
+                });
+
+                conn.on('error', (err) => {
+                    console.error('Koneksi error:', err);
+                    if (!isReconnecting) startReconnect(hostId);
+                });
+            });
+
+            peer.on('error', (err) => {
+                clearTimeout(connTimeout);
+                console.error('❌ Peer error:', err);
+                if (err.type === 'peer-unavailable') {
+                    setStatus('❌ ID host tidak ditemukan. Pastikan host sudah berjalan.', 'error');
+                    showError('ID host tidak ditemukan');
+                } else {
+                    setStatus('❌ Error: ' + err.message, 'error');
+                    showError('Error: ' + err.message);
+                }
+                connectBtn.disabled = false;
+                if (!isReconnecting) startReconnect(hostId);
+            });
+        }
+
+        // ---- AUTO-FORMAT ROOM ID ----
+        hostIdInput.addEventListener('input', function(e) {
+            let value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 7) value = value.slice(0, 7);
+            if (value.length >= 2 && value.length < 5) {
+                value = value.slice(0, 2) + '-' + value.slice(2);
+            } else if (value.length >= 5) {
+                value = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5);
+            }
+            this.value = value;
+        });
+
+        // ---- EVENT LISTENERS ----
+        connectBtn.addEventListener('click', () => {
+            let hostId = hostIdInput.value.trim().toUpperCase();
+            if (!hostId) {
+                setStatus('⚠️ Masukkan ID host.', 'error');
+                showError('Masukkan ID host');
+                return;
+            }
+            if (!isValidRoomCode(hostId)) {
+                setStatus('⚠️ Format ID tidak valid. Contoh: AB-CD3-FG2', 'error');
+                showError('Format ID tidak valid');
+                return;
+            }
+            
+            reconnectAttempts = 0;
+            stopReconnect();
+            connectToHost(hostId);
+        });
+
+        hostIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') connectBtn.click();
+        });
+
+        // ---- FULLSCREEN API ----
+        document.addEventListener('dblclick', () => {
+            if (displayDiv.classList.contains('active')) {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen();
+                }
+            }
+        });
+
+        // Keyboard shortcut: F for fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'f' || e.key === 'F') {
+                if (displayDiv.classList.contains('active')) {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        document.documentElement.requestFullscreen();
+                    }
+                }
+            }
+        });
+
+        // ---- AUTO CONNECT ----
+        const params = new URLSearchParams(window.location.search);
+        const hostParam = params.get('host');
+        if (hostParam) {
+            hostIdInput.value = hostParam;
+            connectBtn.click();
+        }
+
+        // ---- SET INITIAL STATUS ----
+        setStatus('🔑 Masukkan ID host untuk terhubung', 'info');
+
+        console.log('📺 Proyektor Full Screen siap');
+        console.log('💡 Tips: Double-click untuk fullscreen, tekan F untuk toggle');
+    </script>
+</body>
+</html>
