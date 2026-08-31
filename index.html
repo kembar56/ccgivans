@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peserta Buzzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.12);
+            --radius: 20px;
+            --radius-sm: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+        }
+
+        #app {
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 28px 24px 32px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(2px);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--primary));
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--bg);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .header-title .emoji {
+            font-size: 1.5rem;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .connection-dot.online {
+            background: var(--success);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .connection-dot.offline {
+            background: var(--danger);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+            animation: pulse-offline 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-offline {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .form-group .hint {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--bg);
+            color: var(--text-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+            background: white;
+        }
+
+        .form-input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-input.code-input {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            min-height: 48px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: var(--danger-dark);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: var(--bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .buzz-wrapper {
+            padding: 12px 0 8px;
+            position: relative;
+        }
+
+        .btn-buzz {
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 32px;
+            border: none;
+            border-radius: 60px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            min-height: 80px;
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 8px 0 #991b1b, 0 8px 30px rgba(239, 68, 68, 0.35);
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .btn-buzz:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #991b1b, 0 8px 30px rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-buzz:disabled {
+            background: #94a3b8;
+            box-shadow: 0 4px 0 #64748b, 0 8px 30px rgba(148, 163, 184, 0.2);
+            transform: translateY(4px);
+            cursor: not-allowed;
+        }
+
+        .btn-buzz .buzz-icon {
+            font-size: 2.2rem;
+            line-height: 1;
+        }
+
+        .btn-buzz .buzz-text {
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+        }
+
+        .btn-buzz .buzz-sub {
+            font-size: 0.65rem;
+            font-weight: 600;
+            opacity: 0.7;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .status-bar {
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: var(--transition);
+            margin: 4px 0 8px;
+        }
+
+        .status-bar.success {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .status-bar.warning {
+            background: #fffbeb;
+            color: #92400e;
+        }
+
+        .status-bar.error {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .status-bar.info {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .status-bar .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .status-bar.success .status-dot { background: var(--success); }
+        .status-bar.warning .status-dot { background: var(--secondary); }
+        .status-bar.error .status-dot { background: var(--danger); }
+        .status-bar.info .status-dot { background: var(--primary); }
+
+        /* ===== ELEMEN SKOR, TIMER, ANTRIAN ===== */
+        .timer-display {
+            text-align: center;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: var(--radius-sm);
+            margin: 8px 0 12px;
+            display: none; /* default sembunyi */
+        }
+
+        .timer-display.visible {
+            display: block;
+        }
+
+        .timer-display .time {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #facc15;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+        }
+
+        .timer-display .time.warning {
+            color: #f59e0b;
+        }
+
+        .timer-display .time.danger {
+            color: #ef4444;
+            animation: pulse-timer 0.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-timer {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        .timer-display .label {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 2px;
+        }
+
+        .question-display {
+            background: #f0f9ff;
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            border: 2px solid #38bdf8;
+            margin: 12px 0;
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .question-display.visible {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-display .q-target {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .question-display .q-target .highlight {
+            color: var(--primary);
+        }
+
+        .question-display .q-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            line-height: 1.5;
+        }
+
+        .question-display .q-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .question-display .q-options .opt {
+            background: #e2e8f0;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .question-display .q-status {
+            margin-top: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .question-display .q-status.correct {
+            color: #065f46;
+            background: #ecfdf5;
+        }
+
+        .question-display .q-status.wrong {
+            color: #991b1b;
+            background: #fef2f2;
+        }
+
+        .score-box {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: var(--radius-sm);
+            padding: 12px 18px;
+            margin: 8px 0;
+            display: none; /* default sembunyi */
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border);
+        }
+
+        .score-box.visible {
+            display: flex;
+        }
+
+        .score-box .score-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-box .score-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--primary);
+            background: white;
+            padding: 2px 20px;
+            border-radius: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .queue-box {
+            background: #f8fafc;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin: 8px 0;
+            border: 1px solid var(--border);
+            display: none; /* default sembunyi */
+        }
+
+        .queue-box.visible {
+            display: block;
+        }
+
+        .queue-box .queue-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .queue-box .queue-header h4 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .queue-box .queue-header .count {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg);
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+
+        .queue-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .queue-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .queue-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .queue-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .queue-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            margin: 3px 0;
+            background: white;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+            transition: var(--transition);
+        }
+
+        .queue-list li .pos {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            min-width: 28px;
+        }
+
+        .queue-list li .name {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .queue-list li .medal {
+            font-size: 1rem;
+        }
+
+        .queue-list li.first {
+            background: #ecfdf5;
+            border-color: #10b981;
+            font-weight: 700;
+        }
+
+        .queue-list li.first .pos {
+            color: #065f46;
+        }
+
+        .queue-list li.self {
+            background: #eff6ff;
+            border-color: var(--primary-light);
+        }
+
+        .queue-list li.self .name::after {
+            content: ' 👈 Anda';
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.7rem;
+        }
+
+        .queue-empty {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 12px 0;
+        }
+
+        #toastMessage {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            max-width: 90%;
+            pointer-events: none;
+        }
+
+        #toastMessage.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toastMessage.error {
+            background: var(--danger);
+        }
+
+        #toastMessage.success {
+            background: var(--success);
+        }
+
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .card { padding: 20px 16px 24px; }
+            .header-title h2 { font-size: 1rem; }
+            .btn-buzz { font-size: 1.4rem; padding: 16px 24px; min-height: 68px; max-width: 240px; }
+            .btn-buzz .buzz-icon { font-size: 1.8rem; }
+            .btn-buzz .buzz-text { font-size: 1.1rem; }
+            .timer-display .time { font-size: 2.4rem; }
+            .question-display .q-text { font-size: 0.95rem; }
+            .score-box .score-value { font-size: 1.2rem; padding: 2px 16px; }
+            .form-input { font-size: 0.85rem; padding: 10px 14px; }
+        }
+
+        @media (max-width: 380px) {
+            .card { padding: 16px 12px 20px; }
+            .btn-buzz { font-size: 1.2rem; padding: 14px 16px; min-height: 60px; max-width: 200px; }
+            .btn-buzz .buzz-icon { font-size: 1.4rem; }
+            .btn-buzz .buzz-text { font-size: 0.9rem; }
+            .header-title h2 { font-size: 0.9rem; }
+            .queue-list li { font-size: 0.75rem; padding: 6px 10px; }
+        }
+
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mt-8 { margin-top: 8px; }
+        .mt-12 { margin-top: 12px; }
+        .gap-6 { gap: 6px; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="card">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-title">
+                <span class="emoji">🧑‍🎓</span>
+                <h2>TIM CCGIVANS</h2>
+            </div>
+            <div class="connection-status">
+                <span class="connection-dot online" id="connectionDot"></span>
+                <span id="connectionLabel">Online</span>
+            </div>
+        </div>
+
+        <!-- FORM GABUNG -->
+        <div id="formGabung">
+            <div class="form-group">
+                <label>🔑 ID Ruangan</label>
+                <input type="text" id="roomIdInput" class="form-input code-input" placeholder="AB-CD3-FG2" maxlength="9" />
+            </div>
+            <div class="form-group">
+                <label>👤 Nama Tim</label>
+                <input type="text" id="namaPesertaInput" class="form-input" placeholder="TIM ???" />
+            </div>
+            <div class="form-group">
+                <label>🔐 Password</label>
+                <input type="password" id="passwordInput" class="form-input" placeholder="****" />
+            </div>
+            <button id="gabungBtn" class="btn btn-success">➕ Hubungkan</button>
+        </div>
+
+        <!-- STATUS BAR -->
+        <div id="statusPeserta" class="status-bar info">
+            <span class="status-dot"></span>
+            <span>Masukkan ID ruangan</span>
+        </div>
+
+        <!-- BUZZ BUTTON -->
+        <div class="buzz-wrapper">
+            <button id="tombolBuzz" class="btn-buzz" disabled>
+                <span class="buzz-icon">🔔</span>
+                <span class="buzz-text">BUZZ</span>
+            </button>
+        </div>
+
+        <!-- TIMER (default sembunyi) -->
+        <div id="timerDisplay" class="timer-display">
+            <div class="time" id="timerValue">--</div>
+            <div class="label">⏱ Waktu Tersisa</div>
+        </div>
+
+        <!-- QUESTION -->
+        <div id="questionDisplay" class="question-display">
+            <div class="q-target" id="qTargetDisplay">🌍 Soal Global</div>
+            <div class="q-text" id="qTextDisplay">Soal</div>
+            <div class="q-options" id="qOptionsDisplay"></div>
+            <div class="q-status" id="qStatusDisplay">⏳ Menunggu</div>
+        </div>
+
+        <!-- SCORE (default sembunyi) -->
+        <div id="skorPeserta" class="score-box">
+            <span class="score-label">⭐ Skor Tim</span>
+            <span class="score-value" id="skorNilai">0</span>
+        </div>
+
+        <!-- QUEUE (default sembunyi) -->
+        <div id="infoPeserta" class="queue-box">
+            <div class="queue-header">
+                <h4>📢 Antrian Buzzer</h4>
+                <span class="count" id="queueCount">0</span>
+            </div>
+            <div id="infoPesertaText">
+                <div class="queue-empty">Belum ada antrian</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+<div id="toastMessage"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+<script>
+// ============================================================
+//  PESERTA – TANPA MULTI-HOST & TANPA CHAT
+// ============================================================
+
+// ---- UTILITY ----
+let audioCtx = null;
+function getAudioContext() {
+    if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+function playBell(freq = 660, duration = 0.35, volume = 0.4) {
+    try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.value = freq;
+        gain1.gain.setValueAtTime(volume, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc1.connect(gain1); gain1.connect(ctx.destination);
+        osc1.start(now); osc1.stop(now + duration);
+
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.value = freq * 1.5;
+        gain2.gain.setValueAtTime(volume * 0.3, now);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.7);
+        osc2.connect(gain2); gain2.connect(ctx.destination);
+        osc2.start(now); osc2.stop(now + duration * 0.7);
+
+        const osc3 = ctx.createOscillator();
+        const gain3 = ctx.createGain();
+        osc3.type = 'sine';
+        osc3.frequency.value = freq * 2.1;
+        gain3.gain.setValueAtTime(volume * 0.15, now);
+        gain3.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.4);
+        osc3.connect(gain3); gain3.connect(ctx.destination);
+        osc3.start(now); osc3.stop(now + duration * 0.4);
+    } catch(e) { console.warn('Audio error:', e); }
+}
+
+function sanitizeHTML(str) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;' };
+    return String(str).replace(/[&<>"'/]/g, s => map[s]);
+}
+
+function formatTime(seconds) {
+    if (seconds < 0) seconds = 0;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+}
+
+function isValidRoomCode(code) {
+    return /^[A-Z0-9]{2}-[A-Z0-9]{3}-[A-Z0-9]{2}$/.test(code);
+}
+
+function showToast(msg, duration = 2500, type = '') {
+    const el = document.getElementById('toastMessage');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => {
+        el.className = '';
+    }, duration);
+}
+
+function showError(msg, duration = 3000) {
+    showToast('❌ ' + msg, duration, 'error');
+}
+
+// ---- CONFETTI ----
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+let confettiPieces = [], confettiAnimId = null;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function spawnConfetti(count = 80) {
+    const colors = ['#f44336','#e91e63','#9c27b0','#3f51b5','#03a9f4','#4caf50','#ffeb3b','#ff9800','#ff5722'];
+    for (let i = 0; i < count; i++) {
+        confettiPieces.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            w: 6 + Math.random() * 8,
+            h: 6 + Math.random() * 8,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vy: 2 + Math.random() * 4,
+            vx: (Math.random() - 0.5) * 2,
+            rot: Math.random() * 360,
+            rotSpeed: (Math.random() - 0.5) * 8,
+            life: 1,
+            decay: 0.005 + Math.random() * 0.01,
+        });
+    }
+    if (!confettiAnimId) animateConfetti();
+}
+
+function animateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    confettiPieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.05;
+        p.rot += p.rotSpeed;
+        p.life -= p.decay;
+        if (p.life > 0) {
+            alive = true;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot * Math.PI / 180);
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+            ctx.restore();
+        }
+    });
+    confettiPieces = confettiPieces.filter(p => p.life > 0);
+    if (alive) {
+        confettiAnimId = requestAnimationFrame(animateConfetti);
+    } else {
+        confettiAnimId = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+// ---- RECONNECTION MANAGER ----
+const ReconnectionManager = {
+    attempts: 0,
+    maxAttempts: 20,
+    baseDelay: 1000,
+    maxDelay: 30000,
+    timer: null,
+    isReconnecting: false,
+    hostId: null,
+    nama: null,
+    password: null,
+    peer: null,
+    
+    start(hostId, nama, password, peerInstance) {
+        if (this.isReconnecting) return;
+        this.isReconnecting = true;
+        this.hostId = hostId;
+        this.nama = nama;
+        this.password = password;
+        this.peer = peerInstance;
+        this.attempts = 0;
+        this.attemptReconnect();
+    },
+    
+    attemptReconnect() {
+        if (this.attempts >= this.maxAttempts) {
+            showError('Gagal menyambung ulang setelah 20 kali. Refresh halaman.');
+            this.stop();
+            resetParticipantUI();
+            return;
+        }
+        
+        this.attempts++;
+        const delay = Math.min(this.baseDelay * Math.pow(1.5, this.attempts), this.maxDelay);
+        
+        setStatus('⏳ Mencoba sambung ulang (' + this.attempts + '/' + this.maxAttempts + ')...', 'warning');
+        
+        this.timer = setTimeout(() => {
+            if (this.peer) {
+                try { this.peer.destroy(); } catch(e) {}
+                this.peer = null;
+            }
+            initParticipant(this.hostId, this.nama, this.password);
+            this.isReconnecting = false;
+        }, delay);
+    },
+    
+    stop() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+        this.isReconnecting = false;
+        this.attempts = 0;
+    },
+    
+    reset() {
+        this.stop();
+        this.attempts = 0;
+        this.isReconnecting = false;
+    }
+};
+
+// ---- STATE ----
+const AppState = {
+    peer: null,
+    myConnection: null,
+    hasBuzzed: false,
+    hostLocked: false,
+    reconnectAttempts: 0,
+    maxReconnectAttempts: 10,
+    reconnectTimer: null,
+    isReconnecting: false,
+    connectionTimeout: null,
+    namaSaya: '',
+    hostId: '',
+    myScore: 0,
+    timerRemaining: 0,
+    timerInterval: null,
+    showScores: false,   // default false, dikontrol host
+    showTimers: false,
+    showQueues: false,
+    kicked: false,
+    currentQuestion: null,
+    questionAnswered: false,
+};
+
+// ---- DOM REFS ----
+const formGabung = document.getElementById('formGabung');
+const roomIdInput = document.getElementById('roomIdInput');
+const namaPesertaInput = document.getElementById('namaPesertaInput');
+const passwordInput = document.getElementById('passwordInput');
+const gabungBtn = document.getElementById('gabungBtn');
+const tombolBuzz = document.getElementById('tombolBuzz');
+const statusPeserta = document.getElementById('statusPeserta');
+const timerDisplay = document.getElementById('timerDisplay');
+const timerValue = document.getElementById('timerValue');
+const skorPeserta = document.getElementById('skorPeserta');
+const skorNilai = document.getElementById('skorNilai');
+const infoPeserta = document.getElementById('infoPeserta');
+const infoPesertaText = document.getElementById('infoPesertaText');
+const queueCount = document.getElementById('queueCount');
+const connectionDot = document.getElementById('connectionDot');
+const connectionLabel = document.getElementById('connectionLabel');
+const questionDisplay = document.getElementById('questionDisplay');
+const qTextDisplay = document.getElementById('qTextDisplay');
+const qOptionsDisplay = document.getElementById('qOptionsDisplay');
+const qStatusDisplay = document.getElementById('qStatusDisplay');
+const qTargetDisplay = document.getElementById('qTargetDisplay');
+
+// ---- SET STATUS ----
+function setStatus(text, type = 'info') {
+    statusPeserta.className = 'status-bar ' + type;
+    const dot = statusPeserta.querySelector('.status-dot');
+    const span = statusPeserta.querySelector('span:last-child');
+    if (span) span.textContent = text;
+}
+
+// ---- AUTO-FORMAT ROOM ID ----
+roomIdInput.addEventListener('input', function(e) {
+    let value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (value.length > 7) value = value.slice(0, 7);
+    if (value.length >= 2 && value.length < 5) {
+        value = value.slice(0, 2) + '-' + value.slice(2);
+    } else if (value.length >= 5) {
+        value = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5);
+    }
+    this.value = value;
+});
+
+// ---- UI FUNCTIONS ----
+function resetParticipantUI() {
+    formGabung.style.display = 'block';
+    tombolBuzz.disabled = true;
+    tombolBuzz.innerHTML = '<span class="buzz-icon">🔔</span><span><span class="buzz-text">BUZZ</span><span class="buzz-sub">Tekan untuk menjawab</span></span>';
+    setStatus('❌ Gagal terhubung. Silakan coba lagi.', 'error');
+    roomIdInput.disabled = false;
+    namaPesertaInput.disabled = false;
+    passwordInput.disabled = false;
+    gabungBtn.disabled = false;
+    if (AppState.myConnection) { try { AppState.myConnection.close(); } catch(e) {} AppState.myConnection = null; }
+    AppState.isReconnecting = false;
+    AppState.kicked = false;
+    ReconnectionManager.stop();
+    clearTimeout(AppState.connectionTimeout);
+    clearInterval(AppState.timerInterval);
+    AppState.timerRemaining = 0;
+    timerDisplay.classList.remove('visible');
+    updateConnectionStatus(false);
+    AppState.myScore = 0;
+    skorNilai.textContent = '0';
+    skorPeserta.classList.remove('visible'); // sembunyikan skor
+    infoPeserta.classList.remove('visible'); // sembunyikan antrian
+    AppState.currentQuestion = null;
+    questionDisplay.classList.remove('visible');
+}
+
+function updateConnectionStatus(online) {
+    connectionDot.className = 'connection-dot ' + (online ? 'online' : 'offline');
+    connectionLabel.textContent = online ? 'Online' : 'Offline';
+}
+
+function updateAntrianUI(queueData) {
+    if (!queueData || queueData.length === 0) {
+        infoPesertaText.innerHTML = `<div class="queue-empty">Belum ada antrian</div>`;
+        queueCount.textContent = '0';
+        if (!AppState.showQueues) infoPeserta.classList.remove('visible');
+        return;
+    }
+    let html = '<ul class="queue-list">';
+    queueData.forEach((item, idx) => {
+        const pos = idx + 1;
+        const isFirst = (pos === 1);
+        const isSelf = (item.name === AppState.namaSaya);
+        let liClass = '';
+        if (isFirst) liClass += ' first';
+        if (isSelf) liClass += ' self';
+        const medal = isFirst ? '🏆' : '';
+        html += `<li class="${liClass}">
+                    <span class="pos">#${pos}</span>
+                    <span class="name">${sanitizeHTML(item.name)}</span>
+                    <span class="medal">${medal}</span>
+                </li>`;
+    });
+    html += '</ul>';
+    infoPesertaText.innerHTML = html;
+    queueCount.textContent = queueData.length;
+    if (AppState.showQueues) infoPeserta.classList.add('visible');
+    else infoPeserta.classList.remove('visible');
+}
+
+function updateScoreUI(score) {
+    if (score !== undefined) {
+        AppState.myScore = score;
+        skorNilai.textContent = score;
+        if (AppState.showScores) skorPeserta.classList.add('visible');
+        else skorPeserta.classList.remove('visible');
+    }
+}
+
+function updateTimerUI(seconds) {
+    if (seconds > 0) {
+        timerValue.textContent = formatTime(seconds);
+        timerValue.className = 'time';
+        if (seconds <= 5) timerValue.classList.add('danger');
+        else if (seconds <= 10) timerValue.classList.add('warning');
+        if (AppState.showTimers) timerDisplay.classList.add('visible');
+        else timerDisplay.classList.remove('visible');
+    } else {
+        timerDisplay.classList.remove('visible');
+    }
+    AppState.timerRemaining = seconds;
+}
+
+// ---- INIT PARTICIPANT ----
+function initParticipant(hostId, nama, password) {
+    if (AppState.peer) { 
+        try { AppState.peer.destroy(); } catch(e) {}
+        AppState.peer = null; 
+    }
+    
+    ReconnectionManager.reset();
+    AppState.reconnectAttempts = 0;
+    if (AppState.reconnectTimer) { 
+        clearTimeout(AppState.reconnectTimer); 
+        AppState.reconnectTimer = null; 
+    }
+    AppState.isReconnecting = false;
+
+    console.log('🔌 Menghubungkan ke host:', hostId);
+    AppState.peer = new Peer({
+        debug: 3,
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+                { urls: 'turn:turn.anyfirewall.com:443?transport=tcp', username: 'webrtc', credential: 'webrtc' },
+                { urls: 'turn:turn.anyfirewall.com:80?transport=udp', username: 'webrtc', credential: 'webrtc' }
+            ]
+        }
+    });
+
+    AppState.connectionTimeout = setTimeout(() => {
+        if (AppState.peer && !AppState.myConnection) {
+            showError('Koneksi timeout. Pastikan host aktif dan ID benar.');
+            resetParticipantUI();
+        }
+    }, 15000);
+
+    AppState.peer.on('open', (id) => {
+        clearTimeout(AppState.connectionTimeout);
+        console.log('✅ Peer open, ID saya:', id);
+        const conn = AppState.peer.connect(hostId, { reliable: true });
+        AppState.myConnection = conn;
+
+        const connTimeout = setTimeout(() => {
+            if (conn && conn.open === false) {
+                showError('Koneksi ke host gagal (timeout)');
+                resetParticipantUI();
+            }
+        }, 8000);
+
+        conn.on('open', () => {
+            clearTimeout(connTimeout);
+            console.log('🔗 Koneksi terbuka, mengirim register');
+            const hashedPassword = password ? btoa(password) : '';
+            conn.send({ type: 'register', name: sanitizeHTML(nama), password: hashedPassword });
+            setStatus('⏳ Menunggu verifikasi...', 'warning');
+            tombolBuzz.disabled = true;
+            updateConnectionStatus(true);
+        });
+
+        conn.on('data', (data) => {
+            console.log('📨 Data dari host:', data);
+            handleParticipantData(data);
+        });
+
+        conn.on('close', () => {
+            console.log('🔌 Koneksi ditutup');
+            if (!ReconnectionManager.isReconnecting && !AppState.kicked) {
+                ReconnectionManager.start(hostId, nama, password, AppState.peer);
+            }
+            setStatus('❌ Koneksi terputus. Menghubungkan ulang...', 'error');
+            tombolBuzz.disabled = true;
+            formGabung.style.display = 'none';
+            updateConnectionStatus(false);
+        });
+
+        conn.on('error', (err) => {
+            console.error('Koneksi error:', err);
+            if (!ReconnectionManager.isReconnecting && !AppState.kicked) {
+                ReconnectionManager.start(hostId, nama, password, AppState.peer);
+            }
+        });
+    });
+
+    AppState.peer.on('error', (err) => {
+        console.error('❌ Peer error:', err);
+        if (err.type === 'peer-unavailable') {
+            showError('ID ruangan tidak ditemukan. Pastikan host sudah membuat ruangan.');
+        } else {
+            showError('Error: ' + err.message);
+        }
+        resetParticipantUI();
+    });
+}
+
+// ---- HANDLE DATA DARI HOST ----
+function handleParticipantData(data) {
+    if (data.type === 'registered') {
+        if (data.success) {
+            setStatus('✅ Terhubung ke host. Tunggu instruksi.', 'success');
+            tombolBuzz.disabled = false;
+            AppState.hasBuzzed = false;
+            tombolBuzz.innerHTML = '<span class="buzz-icon">🔔</span><span><span class="buzz-text">BUZZ</span><span class="buzz-sub">Tekan untuk menjawab</span></span>';
+            formGabung.style.display = 'none';
+            // Jangan tampilkan antrian/skor/timer otomatis – default sembunyi
+            infoPeserta.classList.remove('visible');
+            skorPeserta.classList.remove('visible');
+            timerDisplay.classList.remove('visible');
+            ReconnectionManager.reset();
+            AppState.isReconnecting = false;
+            updateConnectionStatus(true);
+            AppState.namaSaya = namaPesertaInput.value.trim();
+            console.log('✅ Registrasi berhasil sebagai:', AppState.namaSaya);
+        } else {
+            setStatus('❌ ' + (data.reason || 'Gagal terdaftar'), 'error');
+            tombolBuzz.disabled = true;
+            if (AppState.myConnection) { AppState.myConnection.close(); }
+            formGabung.style.display = 'block';
+            roomIdInput.disabled = false;
+            namaPesertaInput.disabled = false;
+            passwordInput.disabled = false;
+            gabungBtn.disabled = false;
+            updateConnectionStatus(false);
+        }
+        return;
+    }
+
+    if (data.type === 'toggleVisibility') {
+        if (data.target === 'scores') {
+            AppState.showScores = data.visible;
+            if (AppState.showScores) skorPeserta.classList.add('visible');
+            else skorPeserta.classList.remove('visible');
+        } else if (data.target === 'timers') {
+            AppState.showTimers = data.visible;
+            if (AppState.showTimers && AppState.timerRemaining > 0) timerDisplay.classList.add('visible');
+            else timerDisplay.classList.remove('visible');
+        } else if (data.target === 'queues') {
+            AppState.showQueues = data.visible;
+            if (AppState.showQueues) {
+                // jika ada data antrian, tampilkan
+                const queueData = []; // akan diupdate via queueUpdate
+                // Kita panggil updateAntrianUI nanti ketika queueUpdate datang
+            } else {
+                infoPeserta.classList.remove('visible');
+            }
+        }
+        return;
+    }
+
+    if (data.type === 'lockStatus') {
+        AppState.hostLocked = data.locked;
+        if (AppState.hostLocked) {
+            setStatus('🔒 Buzzer dikunci oleh guru.', 'warning');
+            tombolBuzz.disabled = true;
+        } else {
+            setStatus('🔓 Buzzer terbuka, silakan tekan!', 'success');
+            if (!AppState.hasBuzzed) tombolBuzz.disabled = false;
+        }
+        return;
+    }
+
+    if (data.type === 'buzzResult') {
+        if (data.success) {
+            AppState.hasBuzzed = true;
+            tombolBuzz.disabled = true;
+            tombolBuzz.innerHTML = '<span class="buzz-icon">✅</span><span><span class="buzz-text">BERHASIL</span><span class="buzz-sub">Posisi ke-' + data.position + '</span></span>';
+            setStatus('🎉 Anda berhasil! Posisi ke-' + data.position, 'success');
+            playBell(660,0.3,0.4);
+            spawnConfetti(120);
+        } else {
+            setStatus('❌ ' + (data.reason || 'Gagal buzz'), 'error');
+            if (!AppState.hasBuzzed && !AppState.hostLocked) tombolBuzz.disabled = false;
+        }
+        return;
+    }
+
+    if (data.type === 'queueUpdate') {
+        updateAntrianUI(data.queue);
+        return;
+    }
+
+    if (data.type === 'testSound') {
+        playBell(500,0.35,0.45);
+        if (AppState.myConnection) AppState.myConnection.send({ type: 'testSoundResponse' });
+        return;
+    }
+
+    if (data.type === 'reset') {
+        AppState.hasBuzzed = false;
+        tombolBuzz.disabled = false;
+        tombolBuzz.innerHTML = '<span class="buzz-icon">🔔</span><span><span class="buzz-text">BUZZ</span><span class="buzz-sub">Tekan untuk menjawab</span></span>';
+        setStatus('🔄 Antrian direset. Silakan buzz!', 'success');
+        infoPeserta.classList.remove('visible');
+        return;
+    }
+
+    if (data.type === 'scoreUpdate') {
+        const myScore = data.scores[AppState.namaSaya] || 0;
+        updateScoreUI(myScore);
+        return;
+    }
+
+    if (data.type === 'timerUpdate') {
+        updateTimerUI(data.remaining);
+        return;
+    }
+
+    if (data.type === 'timerStart' || data.type === 'timerGlobalStart') {
+        const elapsed = (Date.now() - data.startTime) / 1000;
+        const remaining = Math.max(0, data.duration - elapsed);
+        updateTimerUI(Math.ceil(remaining));
+        if (AppState.timerInterval) clearInterval(AppState.timerInterval);
+        AppState.timerInterval = setInterval(() => {
+            const newElapsed = (Date.now() - data.startTime) / 1000;
+            const newRemaining = Math.max(0, data.duration - newElapsed);
+            updateTimerUI(Math.ceil(newRemaining));
+            if (newRemaining <= 0) {
+                clearInterval(AppState.timerInterval);
+                AppState.timerInterval = null;
+                timerDisplay.classList.remove('visible');
+                if (data.type === 'timerGlobalStart') playBell(440,0.6,0.5);
+            }
+        }, 200);
+        return;
+    }
+
+    if (data.type === 'timerStop' || data.type === 'timerEnd' || data.type === 'timerGlobalStop' || data.type === 'timerGlobalEnd') {
+        clearInterval(AppState.timerInterval);
+        AppState.timerInterval = null;
+        updateTimerUI(0);
+        if (data.type === 'timerEnd' || data.type === 'timerGlobalEnd') playBell(440,0.6,0.5);
+        return;
+    }
+
+    if (data.type === 'confetti') {
+        spawnConfetti(100);
+        return;
+    }
+
+    if (data.type === 'ping') {
+        if (AppState.myConnection) AppState.myConnection.send({ type: 'pong' });
+        return;
+    }
+
+    if (data.type === 'kicked') {
+        alert('Anda dikeluarkan oleh host.');
+        AppState.kicked = true;
+        resetParticipantUI();
+        return;
+    }
+
+    if (data.type === 'babakReset') {
+        AppState.hasBuzzed = false;
+        tombolBuzz.disabled = false;
+        tombolBuzz.innerHTML = '<span class="buzz-icon">🔔</span><span><span class="buzz-text">BUZZ</span><span class="buzz-sub">Tekan untuk menjawab</span></span>';
+        setStatus('🔄 Babak baru! Silakan buzz.', 'success');
+        infoPeserta.classList.remove('visible');
+        clearInterval(AppState.timerInterval);
+        AppState.timerInterval = null;
+        updateTimerUI(0);
+        updateAntrianUI([]);
+        AppState.currentQuestion = null;
+        questionDisplay.classList.remove('visible');
+        return;
+    }
+
+    if (data.type === 'whitelistUpdate') {
+        return;
+    }
+
+    // ---- SOAL ----
+    if (data.type === 'showQuestion') {
+        if (data.target && data.target !== AppState.namaSaya) {
+            return;
+        }
+        AppState.currentQuestion = data.question;
+        AppState.questionAnswered = false;
+        questionDisplay.classList.add('visible');
+        qTextDisplay.textContent = data.question.text;
+        if (data.target) {
+            qTargetDisplay.innerHTML = '🎯 Soal untuk <span class="highlight">Anda</span>';
+        } else {
+            qTargetDisplay.innerHTML = '🌍 Soal Global';
+        }
+        if (data.question.type === 'pilihan_ganda' && data.question.options && data.question.options.length) {
+            let html = '';
+            const letters = ['A','B','C','D','E','F'];
+            data.question.options.forEach((opt, i) => {
+                html += `<span class="opt">${letters[i] || (i+1)}. ${sanitizeHTML(opt)}</span>`;
+            });
+            qOptionsDisplay.innerHTML = html;
+        } else {
+            qOptionsDisplay.innerHTML = '';
+        }
+        qStatusDisplay.textContent = '⏳ Menunggu jawaban...';
+        qStatusDisplay.className = 'q-status';
+        return;
+    }
+
+    if (data.type === 'questionEnd') {
+        AppState.currentQuestion = null;
+        questionDisplay.classList.remove('visible');
+        return;
+    }
+
+    if (data.type === 'questionResult') {
+        if (AppState.currentQuestion) {
+            if (data.answerer === AppState.namaSaya) {
+                qStatusDisplay.innerHTML = data.correct ? '✅ Jawaban Anda benar! +' + data.points + ' poin' : '❌ Jawaban Anda salah';
+                qStatusDisplay.className = data.correct ? 'q-status correct' : 'q-status wrong';
+                if (data.correct) spawnConfetti(80);
+            } else {
+                qStatusDisplay.innerHTML = `${data.answerer} menjawab: ${data.correct ? '✅ Benar' : '❌ Salah'}`;
+                qStatusDisplay.className = data.correct ? 'q-status correct' : 'q-status wrong';
+            }
+            AppState.questionAnswered = true;
+        }
+        return;
+    }
+
+    if (data.type === 'unlockBuzzer') {
+        AppState.hostLocked = false;
+        if (!AppState.hasBuzzed) tombolBuzz.disabled = false;
+        setStatus('🔓 Buzzer dibuka!', 'success');
+        return;
+    }
+
+    if (data.type === 'lockBuzzer') {
+        AppState.hostLocked = true;
+        tombolBuzz.disabled = true;
+        setStatus('🔒 Buzzer dikunci', 'warning');
+        return;
+    }
+}
+
+// ---- EVENT LISTENERS ----
+gabungBtn.addEventListener('click', () => {
+    const hostId = roomIdInput.value.trim().toUpperCase();
+    const rawNama = namaPesertaInput.value.trim();
+    const password = passwordInput.value.trim();
+    
+    if (!hostId) { showError('Masukkan ID Ruangan.'); return; }
+    if (!isValidRoomCode(hostId)) {
+        showError('Format ID tidak valid. Contoh: AB-CD3-FG2');
+        return;
+    }
+    if (!rawNama) { showError('Masukkan nama Anda.'); return; }
+    const nama = sanitizeHTML(rawNama);
+
+    roomIdInput.disabled = true;
+    namaPesertaInput.disabled = true;
+    passwordInput.disabled = true;
+    gabungBtn.disabled = true;
+    setStatus('⏳ Menghubungkan...', 'warning');
+
+    if (AppState.peer) { 
+        try { AppState.peer.destroy(); } catch(e) {}
+        AppState.peer = null; 
+    }
+    AppState.namaSaya = nama;
+    AppState.hostId = hostId;
+    AppState.kicked = false;
+    initParticipant(hostId, nama, password);
+});
+
+tombolBuzz.addEventListener('click', () => {
+    if (!AppState.myConnection) return;
+    if (AppState.hasBuzzed) return;
+    if (AppState.hostLocked) return;
+    AppState.myConnection.send({ type: 'buzz' });
+    tombolBuzz.disabled = true;
+    tombolBuzz.innerHTML = '<span class="buzz-icon">⏳</span><span><span class="buzz-text">MENGIRIM</span><span class="buzz-sub">Menunggu konfirmasi...</span></span>';
+    setStatus('⏳ Menunggu konfirmasi...', 'warning');
+    getAudioContext();
+});
+
+// ---- INIT ----
+setStatus('💡 Masukkan ID ruangan untuk bergabung', 'info');
+console.log('🧑‍🎓 Peserta siap (tanpa Multi-Host, tanpa Chat)');
+</script>
+</body>
+</html>
