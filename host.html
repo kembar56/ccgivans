@@ -1,2093 +1,981 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Host Buzzer + Soal (Target Peserta)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontrol Cerdas Cermat - 12 Paket Soal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <style>
-        /* --- CSS --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
-        #app { max-width: 1400px; width: 100%; }
-        .card { background: white; border-radius: 24px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); padding: 20px; }
-        h2 { color: #1a3b5d; margin-bottom: 12px; text-align: center; font-size: 1.5rem; }
-        button { font-family: inherit; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.2s; background: transparent; color: #1a3b5d; border: 1.5px solid #d1d9e6; display: inline-flex; align-items: center; gap: 4px; justify-content: center; min-height: 30px; min-width: 30px; }
-        button:hover:not(:disabled) { background: #f1f5f9; border-color: #94a3b8; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        button.primary { background: #2563eb; border-color: #2563eb; color: white; }
-        button.primary:hover { background: #1d4ed8; }
-        button.success { background: #16a34a; border-color: #16a34a; color: white; }
-        button.success:hover { background: #15803d; }
-        button.danger { background: #dc2626; border-color: #dc2626; color: white; }
-        button.danger:hover { background: #b91c1c; }
-        button.warning { background: #f59e0b; border-color: #f59e0b; color: white; }
-        button.warning:hover { background: #d97706; }
-        button.outline-warning { border-color: #f59e0b; color: #f59e0b; }
-        button.outline-warning:hover { background: #f59e0b; color: white; }
-        button.outline-danger { border-color: #dc2626; color: #dc2626; }
-        button.outline-danger:hover { background: #dc2626; color: white; }
-        button.outline-success { border-color: #16a34a; color: #16a34a; }
-        button.outline-success:hover { background: #16a34a; color: white; }
-        button.outline-secondary { border-color: #6b7280; color: #6b7280; }
-        button.outline-secondary:hover { background: #6b7280; color: white; }
-        button.toggle-on { background: #16a34a; border-color: #16a34a; color: white; }
-        button.toggle-off { background: transparent; border-color: #94a3b8; color: #64748b; }
-
-        .host-grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; margin-top: 12px; align-items: start; }
-        .left-panel { display: flex; flex-direction: column; gap: 8px; }
-        .left-panel .btn-group { display: flex; flex-wrap: wrap; gap: 4px; }
-        .left-panel .btn-group button { flex: 1 0 auto; min-width: 60px; font-size: 0.7rem; padding: 3px 6px; min-height: 28px; }
-        .right-panel { display: flex; flex-direction: column; gap: 10px; }
-
-        .info-box { background: #f8fafc; border-radius: 12px; padding: 10px 14px; border-left: 4px solid #2563eb; }
-        .lock-box { border-left-color: #f59e0b; }
-        .room-id { font-size: 1.4rem; font-weight: 700; color: #1a3b5d; word-break: break-all; }
-
-        .participant-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: white; border-radius: 20px; margin: 2px 0; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 4px; font-size: 0.8rem; }
-        .participant-item .name { font-weight: 600; display: flex; align-items: center; gap: 4px; }
-        .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
-        .online-dot.online { background: #22c55e; }
-        .online-dot.offline { background: #ef4444; }
-        .score-badge { background: #e2e8f0; border-radius: 20px; padding: 0 8px; font-weight: 700; font-size: 0.7rem; cursor: pointer; transition: 0.2s; user-select: none; }
-        .score-badge:hover { background: #d1d9e6; }
-
-        .buzz-queue-box { background: #fef9c3; border-radius: 12px; padding: 8px 12px; border-left: 4px solid #f59e0b; max-height: 160px; overflow-y: auto; }
-        .buzz-queue-box ol { list-style: none; padding: 0; }
-        .buzz-queue-box ol li { padding: 3px 6px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; display: flex; justify-content: space-between; cursor: pointer; }
-        .buzz-queue-box ol li:hover { background: #fef08a; }
-        .buzz-queue-box ol li.first-place { background: #d1fae5; font-weight: 700; border-radius: 20px; padding: 4px 12px; border: 2px solid #10b981; margin: 2px 0; }
-        .buzz-queue-box ol li.first-place::before { content: "🏆"; margin-right: 6px; }
-        .buzz-queue-box ol li.gold { background: #fef08a; border: 2px solid #eab308; }
-        .buzz-queue-box ol li.silver { background: #e5e7eb; border: 2px solid #9ca3af; }
-        .buzz-queue-box ol li.bronze { background: #fed7aa; border: 2px solid #d97706; }
-
-        .whitelist-box { background: #f8fafc; border-radius: 12px; padding: 8px 10px; border: 1px solid #e2e8f0; }
-        .whitelist-box .input-row { display: flex; gap: 4px; margin-bottom: 4px; }
-        .whitelist-box .input-row input { flex:1; padding:4px 8px; border:1px solid #d1d9e6; border-radius:6px; font-size:0.75rem; min-height:28px; }
-        .whitelist-display { max-height: 80px; overflow-y: auto; background:white; border-radius:6px; padding:4px 6px; border:1px solid #e2e8f0; }
-        .whitelist-item { display:flex; justify-content:space-between; padding:2px 0; font-size:0.75rem; border-bottom:1px solid #f1f5f9; }
-        .whitelist-item .del-btn { background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem; padding:0 4px; }
-
-        .timer-box { background: #e0f2fe; border-radius: 12px; padding: 8px 12px; border-left: 4px solid #0ea5e9; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-        .timer-box select, .timer-box input { padding:2px 6px; border-radius:6px; border:1px solid #b9dff5; font-size:0.75rem; min-height:28px; }
-        .timer-box input[type="number"] { width:50px; text-align:center; }
-        #timerDisplay { font-size:1.2rem; font-weight:700; min-width:40px; color:#0c4a6e; }
-        .preset-btn { font-size:0.65rem; padding:2px 8px; min-height:24px; min-width:28px; }
-
-        .stats-box { background: #f8fafc; border-radius: 12px; padding: 6px 10px; border-left: 4px solid #8b5cf6; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
-        .stats-box .stat-item { text-align:center; }
-        .stats-box .stat-item .label { font-size:0.6rem; color:#64748b; }
-        .stats-box .stat-item .value { font-size:0.9rem; font-weight:700; color:#1a3b5d; }
-
-        .hidden { display: none !important; }
-
-        .soal-box { background: #f0f9ff; border-radius: 12px; padding: 10px; border: 2px solid #38bdf8; margin-top: 6px; }
-        .soal-box h3 { font-size:0.9rem; margin-bottom:6px; color:#0c4a6e; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-        .soal-box .soal-form-row { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
-        .soal-box .soal-form-row input, .soal-box .soal-form-row select, .soal-box .soal-form-row textarea { padding:4px 6px; border:1px solid #b9dff5; border-radius:6px; font-size:0.75rem; min-height:28px; flex:1 0 auto; }
-        .soal-box .soal-form-row textarea { min-height:40px; flex-basis:100%; }
-        .soal-box .soal-list { max-height:150px; overflow-y:auto; background:white; border-radius:6px; padding:4px; border:1px solid #e2e8f0; }
-        .soal-item { display:flex; justify-content:space-between; align-items:center; padding:4px 6px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; gap:4px; flex-wrap:wrap; }
-        .soal-item .soal-text { font-weight:600; flex:1; min-width:120px; }
-        .soal-item .soal-actions { display:flex; gap:2px; flex-wrap:wrap; }
-        .soal-item.active-soal { background: #dbeafe; border-radius:20px; border:2px solid #2563eb; }
-        .soal-item .badge { background:#e2e8f0; border-radius:12px; padding:0 6px; font-size:0.6rem; }
-
-        #projectorOverlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#0f172a; z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; color:white; padding:40px; overflow-y:auto; }
-        #projectorOverlay.active { display:flex; }
-        #projectorOverlay .close-btn { position:fixed; top:20px; right:30px; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.3); color:white; border-radius:50%; width:44px; height:44px; font-size:1.4rem; cursor:pointer; z-index:10001; }
-        #projectorContent { width:100%; max-width:900px; display:flex; flex-direction:column; align-items:center; }
-        #projectorContent h1 { color:#facc15; font-size:2rem; margin-bottom:16px; }
-        #projectorTimerDisplay { font-size:3rem; font-weight:bold; color:#facc15; display:none; margin-bottom:10px; }
-        .projector-item { background:#1e293b; border-radius:40px; padding:10px 20px; width:70%; max-width:500px; font-size:1.4rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px; border:2px solid #334155; margin:6px 0; }
-        .projector-item.first { background:#065f46; border-color:#10b981; font-size:2rem; width:85%; }
-        .projector-empty { color:#64748b; font-size:1.4rem; }
-
-        #projectorQuestion { background: #1e293b; border-radius: 24px; padding: 30px; width: 90%; max-width: 700px; margin: 10px 0; border: 3px solid #38bdf8; display: none; }
-        #projectorQuestion.active { display: block; }
-        #projectorQuestion .q-text { font-size: 2rem; font-weight: 700; color: white; text-align: center; }
-        #projectorQuestion .q-options { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; }
-        #projectorQuestion .q-options .opt { background: #334155; padding: 8px 20px; border-radius: 40px; font-size: 1.2rem; color: #e2e8f0; }
-        #projectorQuestion .q-status { font-size: 1.4rem; color: #facc15; text-align: center; margin-top: 10px; }
-        #projectorQuestion .q-answerer { color: #22c55e; font-weight: 700; }
-        #projectorQuestion .q-target { font-size: 1rem; color: #94a3b8; text-align: center; margin-bottom: 10px; }
-
-        #projectorScores { margin-top: 30px; width: 80%; max-width: 600px; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 16px 20px; border: 1px solid #334155; display: none; }
-        #projectorScores.visible { display: block; }
-        #projectorScores h2 { color: #facc15; font-size: 1.5rem; margin-bottom: 12px; text-align: center; }
-        .projector-score-item { display: flex; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #1e293b; font-size: 1.1rem; }
-        .projector-score-item .pname { color: #e2e8f0; }
-        .projector-score-item .pscore { color: #facc15; font-weight: bold; }
-
-        .buzz-notification { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9998; display:none; align-items:center; justify-content:center; color:white; font-size:3rem; font-weight:700; animation:fadeIn 0.3s; pointer-events:none; }
-        .buzz-notification.active { display:flex; }
-        .buzz-notification .buzz-name { background:#facc15; color:#0f172a; padding:16px 32px; border-radius:60px; box-shadow:0 0 50px rgba(250,204,21,0.5); }
-        @keyframes fadeIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 40px; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; opacity: 0; transition: opacity 0.4s, transform 0.4s; pointer-events: none; text-align: center; max-width: 90%; }
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        #confettiCanvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
-
-        @media (max-width: 768px) { .host-grid { grid-template-columns: 1fr; } .left-panel .btn-group button { font-size:0.65rem; min-width:50px; } .participant-item { flex-direction:column; align-items:stretch; } .timer-box { flex-direction:column; align-items:stretch; } }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: #f1f5f9; padding: 20px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+        h1 { color: #facc15; text-align: center; margin-bottom: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .card { background: rgba(255,255,255,0.06); border-radius: 24px; padding: 20px; border: 1px solid #334155; }
+        .card h2 { color: #facc15; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; color: #cbd5e1; }
+        input, textarea, select { width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid #475569; background: #1e293b; color: #f1f5f9; font-size: 1rem; }
+        textarea { resize: vertical; min-height: 80px; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+        .btn { border: none; padding: 10px 20px; border-radius: 40px; font-weight: 700; cursor: pointer; transition: 0.2s; flex: 1 0 auto; }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary { background: #facc15; color: #0f172a; }
+        .btn-primary:hover { background: #eab308; }
+        .btn-secondary { background: #475569; color: #fff; }
+        .btn-secondary:hover { background: #64748b; }
+        .btn-success { background: #22c55e; color: #0f172a; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-warning { background: #f97316; color: #0f172a; }
+        .btn-warning:hover { background: #ea580c; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+        .tim-list { display: flex; flex-direction: column; gap: 12px; }
+        .tim-item { display: flex; align-items: center; gap: 10px; background: #1e293b; padding: 10px 15px; border-radius: 16px; flex-wrap: wrap; }
+        .tim-item input[type="text"] { flex: 1; background: transparent; border: none; color: #f1f5f9; font-weight: 700; font-size: 1.1rem; padding: 5px 0; min-width: 80px; }
+        .tim-item input[type="number"] { width: 70px; text-align: center; background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 6px; font-weight: 700; font-size: 1.2rem; color: #facc15; }
+        .tim-item .btn { flex: 0 0 auto; padding: 6px 14px; font-size: 1.1rem; }
+        .status-box { background: #1e293b; border-radius: 16px; padding: 12px 18px; margin-top: 15px; border-left: 6px solid #facc15; color: #cbd5e1; }
+        .status-box.running { border-left-color: #22c55e; background: #1e293b; }
+        .status-box.stopped { border-left-color: #ef4444; }
+        #fileInput, #restoreInput, #imageInput { display: none; }
+        .paket-indicator { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
+        .paket-A { background: #3b82f6; color: #fff; }
+        .paket-B { background: #22c55e; color: #fff; }
+        .paket-C { background: #f97316; color: #fff; }
+        .paket-D { background: #a855f7; color: #fff; }
+        .paket-E { background: #ec4899; color: #fff; }
+        .paket-F { background: #14b8a6; color: #fff; }
+        .paket-G { background: #f59e0b; color: #fff; }
+        .paket-H { background: #8b5cf6; color: #fff; }
+        .paket-I { background: #ef4444; color: #fff; }
+        .paket-J { background: #06b6d4; color: #fff; }
+        .paket-K { background: #84cc16; color: #fff; }
+        .paket-L { background: #f472b6; color: #fff; }
+        .kontrol-tampilan { display: flex; flex-wrap: wrap; gap: 15px; margin: 10px 0; }
+        .kontrol-tampilan label { display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; color: #cbd5e1; }
+        .kontrol-tampilan input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #facc15; }
+        .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:999; }
+        .modal-box { background: #1e293b; padding: 30px; border-radius: 24px; max-width: 600px; width:90%; border:1px solid #334155; max-height:80vh; overflow-y:auto; }
+        .modal-box h3 { color:#facc15; margin-top:0; }
+        .modal-box pre { background:#0f172a; padding:15px; border-radius:12px; color:#cbd5e1; white-space:pre-wrap; word-break:break-word; max-height:300px; overflow-y:auto; }
+        .modal-box .btn-group { justify-content:flex-end; }
+        @media (max-width: 800px) { .container { grid-template-columns: 1fr; } }
+        .shortcut-hint { font-size:0.8rem; color:#94a3b8; margin-top:5px; }
+        .btn-prev { background: #6366f1; color: #fff; }
+        .btn-prev:hover { background: #4f46e5; }
+        .btn-backup { background: #8b5cf6; color: #fff; }
+        .btn-backup:hover { background: #7c3aed; }
+        .btn-restore { background: #06b6d4; color: #fff; }
+        .btn-restore:hover { background: #0891b2; }
+        .btn-histori { background: #f59e0b; color: #0f172a; }
+        .btn-histori:hover { background: #d97706; }
+        .histori-container { margin-top:15px; border-top:1px solid #334155; padding-top:15px; max-height:200px; overflow-y:auto; }
+        .histori-item { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e293b; font-size:0.85rem; color:#cbd5e1; }
+        .histori-item .waktu { color:#94a3b8; font-size:0.75rem; }
+        .histori-item .perubahan { font-weight:600; }
+        .histori-item .perubahan.plus { color:#22c55e; }
+        .histori-item .perubahan.minus { color:#ef4444; }
+        .histori-item .perubahan.buzzer { color:#facc15; }
+        .histori-item .perubahan.reset { color:#f97316; }
+        .paket-import-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; }
+        .btn-image { background: #8b5cf6; color: #fff; }
+        .btn-image:hover { background: #7c3aed; }
     </style>
 </head>
 <body>
-<div id="app">
-    <div class="card">
-        <h2>👨‍🏫 Host CCGIVANS</h2>
-        <div class="host-grid">
-            <!-- Left Panel -->
-            <div class="left-panel">
-                <div class="btn-group">
-                    <button id="buatRuangan" class="success">🚀 Set Ruang</button>
-                    <button id="toggleLock" class="outline-warning">🔒 Kunci</button>
-                    <button id="resetBuzzer" class="outline-danger">🔄 Reset</button>
-                    <button id="resetScores" class="outline-danger">🔄 Skor</button>
-                    <button id="resetBabak" class="outline-warning">🔄 Babak</button>
-                    <button id="testSound" class="outline-secondary">🔊 Tes</button>
-                    <button id="projectorBtn" class="primary">📺 Projector</button>
-                    <button id="demoBuzz" class="outline-secondary">🎮 Demo</button>
-                    <button id="clearAllParticipants" class="outline-danger">🧹 Hapus Semua</button>
-                    <button id="exportDataBtn" class="outline-success">📊 Ekspor Data</button>
-                </div>
-                <!-- Toggle buttons -->
-                <div class="btn-group" style="margin-top:4px;">
-                    <button id="toggleScores" class="toggle-off">⭐ Skor</button>
-                    <button id="toggleQueues" class="toggle-off">📢 Antrian</button>
-                    <button id="toggleTimers" class="toggle-off">⏱ Timer</button>
-                    <button id="toggleProjectorScores" class="toggle-off">📊 Skor Overlay</button>
-                </div>
-                <div class="btn-group" style="margin-top:4px;">
-                    <button id="exportState" class="outline-secondary">📥 Ekspor</button>
-                    <button id="importState" class="outline-secondary">📤 Impor</button>
-                </div>
-                <div class="info-box lock-box">
-                    <strong>🔓 Buzzer:</strong> <span id="lockStatus">Terbuka</span>
-                </div>
-                <div class="info-box">
-                    <label style="font-weight:600;font-size:0.75rem;">🔑 Password</label>
-                    <input type="text" id="roomPassword" placeholder="Kosongkan jika tidak" style="width:100%;padding:4px 8px;border:1px solid #d1d9e6;border-radius:6px;font-size:0.75rem;min-height:28px;margin-top:2px;" />
-                    <small style="color:#64748b;font-size:0.65rem;">Kosongkan jika tidak perlu password</small>
-                    <button id="setPassword" class="outline-secondary" style="margin-top:2px;">Simpan</button>
-                </div>
-                <div class="whitelist-box">
-                    <h4 style="font-size:0.8rem;margin-bottom:2px;">✅ Daftar Izin</h4>
-                    <div class="input-row">
-                        <input type="text" id="whitelistInput" placeholder="Nama tim" />
-                        <button id="addWhitelist" class="success">Tambah</button>
-                    </div>
-                    <small style="color:#64748b;font-size:0.65rem;">Masukkan nama tim yang diizinkan, lalu klik Tambah</small>
-                    <div class="whitelist-display" id="whitelistDisplay">
-                        <div style="color:#94a3b8;font-size:0.75rem;text-align:center;">Belum ada nama</div>
-                    </div>
-                </div>
+    <h1>🎮 KONTROL CERDAS CERMAT (12 PAKET SOAL)</h1>
+    <div class="container">
+        <!-- KIRI: Soal & Timer -->
+        <div class="card">
+            <h2>📝 Soal & Timer</h2>
+            <div class="form-group">
+                <label>Paket Aktif</label>
+                <select id="paketAktif">
+                    <option value="A">Paket A</option>
+                    <option value="B">Paket B</option>
+                    <option value="C">Paket C</option>
+                    <option value="D">Paket D</option>
+                    <option value="E">Paket E</option>
+                    <option value="F">Paket F</option>
+                    <option value="G">Paket G</option>
+                    <option value="H">Paket H</option>
+                    <option value="I">Paket I (rebutan)</option>
+                    <option value="J">Paket J (rebutan)</option>
+                    <option value="K">Paket K (rebutan)</option>
+                    <option value="L">Paket L (rebutan)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Soal ke-<span id="soalIndexDisplay">0</span> dari <span id="totalSoalDisplay">0</span> (paket <span id="paketLabel">A</span>)</label>
+                <textarea id="pertanyaanInput" placeholder="Tulis soal esai di sini..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Kunci Jawaban (referensi juri)</label>
+                <input id="kunciInput" placeholder="Tulis poin-poin jawaban...">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnUpdateSoal">📤 Update Soal</button>
+                <button class="btn btn-success" id="btnMulaiTimer">▶ Mulai Timer</button>
+                <button class="btn btn-prev" id="btnPrevSoal">⏪ Sebelumnya</button>
+                <button class="btn btn-warning" id="btnNextSoal">⏩ Berikutnya</button>
+                <button class="btn btn-secondary" id="btnResetSoal">⟲ Reset Soal</button>
+                <button class="btn btn-secondary" id="btnResetKeAwal">⟲ Ke Awal</button>
+                <button class="btn btn-danger" id="btnHapusSoal">🗑 Hapus Soal</button>
+                <button class="btn btn-image" id="btnInsertImage">🖼 Sisipkan Gambar</button>
+            </div>
+            <div class="form-group">
+                <label>Timer (detik)</label>
+                <input id="timerInput" type="number" value="30" min="3" max="120">
             </div>
 
-            <!-- Right Panel -->
-            <div class="right-panel">
-                <div class="buzz-queue-box" id="buzzQueueBox">
-                    <h3 style="font-size:0.9rem;margin-bottom:4px;">📢 Antrian (klik untuk nilai/hapus)</h3>
-                    <div id="buzzQueueList"><p style="color:#94a3b8;font-size:0.8rem;">Belum ada yang buzz</p></div>
+            <!-- KONTROL TAMPILAN (checkbox) -->
+            <div class="card" style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.04); border:1px solid #334155;">
+                <h3 style="color:#facc15; margin:0 0 10px 0; font-size:1.2rem;">🎯 Kontrol Tampilan</h3>
+                <div class="kontrol-tampilan">
+                    <label><input type="checkbox" id="chkSoal"> Soal</label>
+                    <label><input type="checkbox" id="chkKunci"> Kunci</label>
+                    <label><input type="checkbox" id="chkTimer"> Timer</label>
+                    <label><input type="checkbox" id="chkSkor"> Skor Tim</label>
+                    <label><input type="checkbox" id="chkPaket"> Paket</label>
+                    <label><input type="checkbox" id="chkHistori"> Histori Skor</label>
                 </div>
+                <small style="color:#94a3b8;">Perubahan langsung terkirim ke tampilan. (default: semua tidak aktif)</small>
+            </div>
 
-                <div class="info-box">
-                    <h3 style="font-size:0.9rem;margin-bottom:4px;">📋 Peserta Terhubung <span id="connectionDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;vertical-align:middle;"></span></h3>
-                    <div id="participantList" style="max-height:200px;overflow-y:auto;">
-                        <p style="color:#94a3b8;font-size:0.8rem;">Belum ada peserta</p>
-                    </div>
-                </div>
+            <div class="status-box" id="statusKontrol">Siap.</div>
+            <div class="shortcut-hint">⌨️ Shortcut: Ctrl+Enter = Update Soal, Spasi = Mulai Timer</div>
+        </div>
 
-                <div class="timer-box">
-                    <span style="font-weight:600;font-size:0.8rem;">⏱ Timer</span>
-                    <select id="timerTarget"><option value="global">🌍 Global</option></select>
-                    <input type="number" id="timerDuration" value="10" min="1" max="300" />
-                    <span style="font-size:0.7rem;">detik</span>
-                    <div style="display:flex;gap:2px;flex-wrap:wrap;">
-                        <button class="preset-btn" data-preset="5">5s</button>
-                        <button class="preset-btn" data-preset="10">10s</button>
-                        <button class="preset-btn" data-preset="15">15s</button>
-                        <button class="preset-btn" data-preset="30">30s</button>
-                    </div>
-                    <button id="startTimer" class="warning">▶ Mulai</button>
-                    <button id="stopTimer" class="danger" disabled>⏹ Stop</button>
-                    <span id="timerDisplay">--</span>
+        <!-- KANAN: Paket & Skor -->
+        <div class="card">
+            <h2>📦 Paket Soal</h2>
+            <div class="paket-import-grid">
+                <button class="btn btn-secondary" data-paket="A">📂 A</button>
+                <button class="btn btn-secondary" data-paket="B">📂 B</button>
+                <button class="btn btn-secondary" data-paket="C">📂 C</button>
+                <button class="btn btn-secondary" data-paket="D">📂 D</button>
+                <button class="btn btn-secondary" data-paket="E">📂 E</button>
+                <button class="btn btn-secondary" data-paket="F">📂 F</button>
+                <button class="btn btn-secondary" data-paket="G">📂 G</button>
+                <button class="btn btn-secondary" data-paket="H">📂 H</button>
+                <button class="btn btn-secondary" data-paket="I">📂 I</button>
+                <button class="btn btn-secondary" data-paket="J">📂 J</button>
+                <button class="btn btn-secondary" data-paket="K">📂 K</button>
+                <button class="btn btn-secondary" data-paket="L">📂 L</button>
+            </div>
+            <input type="file" id="fileInput" accept=".docx" style="display: none;">
+            <input type="file" id="restoreInput" accept=".json" style="display: none;">
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                <span class="paket-indicator paket-A" id="indicatorA">A: 0</span>
+                <span class="paket-indicator paket-B" id="indicatorB">B: 0</span>
+                <span class="paket-indicator paket-C" id="indicatorC">C: 0</span>
+                <span class="paket-indicator paket-D" id="indicatorD">D: 0</span>
+                <span class="paket-indicator paket-E" id="indicatorE">E: 0</span>
+                <span class="paket-indicator paket-F" id="indicatorF">F: 0</span>
+                <span class="paket-indicator paket-G" id="indicatorG">G: 0</span>
+                <span class="paket-indicator paket-H" id="indicatorH">H: 0</span>
+                <span class="paket-indicator paket-I" id="indicatorI">I: 0</span>
+                <span class="paket-indicator paket-J" id="indicatorJ">J: 0</span>
+                <span class="paket-indicator paket-K" id="indicatorK">K: 0</span>
+                <span class="paket-indicator paket-L" id="indicatorL">L: 0</span>
+                <button class="btn btn-danger" id="btnHapusSemuaSoal" style="flex:0 0 auto; padding:4px 12px; font-size:0.9rem;">🗑 Hapus Semua</button>
+            </div>
+            <div class="btn-group" style="margin-top:10px;">
+                <button class="btn btn-backup" id="btnBackupPaket">📦 Backup Paket</button>
+                <button class="btn btn-restore" id="btnRestorePaket">📥 Restore Paket</button>
+            </div>
+            <hr style="border-color:#334155; margin:20px 0;">
+            <h2>🏅 Tim & Skor</h2>
+            <div id="timContainer"></div>
+            <div class="btn-group" style="margin-top:10px;">
+                <button class="btn btn-danger" id="btnResetSkor">↺ Reset Skor</button>
+                <button class="btn btn-secondary" id="btnTambahTim">+ Tambah Tim</button>
+                <button class="btn btn-histori" id="btnToggleHistori">📜 Histori Skor</button>
+            </div>
+            <!-- Histori -->
+            <div id="historiContainer" style="display:none; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#94a3b8; font-size:0.9rem;">Riwayat Perubahan Skor</span>
+                    <button class="btn btn-danger" id="btnHapusHistori" style="flex:0 0 auto; padding:4px 12px; font-size:0.8rem;">🗑 Hapus Histori</button>
                 </div>
-
-                <div class="soal-box">
-                    <h3>
-                        📝 Kelola Soal
-                        <button id="toggleSoalForm" class="outline-secondary" style="font-size:0.7rem;">➕ Tambah</button>
-                        <button id="importSoalBtn" class="outline-secondary" style="font-size:0.7rem;">📥 Impor Soal</button>
-                    </h3>
-                    <div id="soalForm" class="hidden" style="margin-bottom:6px;">
-                        <div class="soal-form-row">
-                            <input type="text" id="qText" placeholder="Teks soal" style="flex:3;" />
-                            <select id="qType">
-                                <option value="pilihan_ganda">Pilihan Ganda</option>
-                                <option value="isian">Isian</option>
-                            </select>
-                            <input type="number" id="qPoints" value="10" min="1" style="width:60px;" />
-                            <span style="font-size:0.7rem;">poin</span>
-                        </div>
-                        <div class="soal-form-row">
-                            <textarea id="qOptions" placeholder="Opsi (pisahkan dengan koma) misal: Jakarta, Bandung, Surabaya" rows="2"></textarea>
-                        </div>
-                        <div class="soal-form-row">
-                            <input type="text" id="qAnswer" placeholder="Jawaban benar" style="flex:2;" />
-                            <button id="addSoalBtn" class="success">Simpan Soal</button>
-                            <button id="cancelSoalBtn" class="outline-secondary">Batal</button>
-                        </div>
-                    </div>
-                    <div class="soal-list" id="soalList">
-                        <div style="color:#94a3b8;font-size:0.8rem;text-align:center;">Belum ada soal</div>
-                    </div>
-                    <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;" id="soalControlPanel">
-                        <button id="endQuestionBtn" class="danger" disabled>Selesai Soal</button>
-                        <button id="lockBuzzerForQuestion" class="outline-warning" disabled>🔒 Kunci Buzzer</button>
-                        <button id="unlockBuzzerForQuestion" class="outline-success" disabled>🔓 Buka Buzzer</button>
-                        <span id="activeQuestionInfo" style="font-size:0.75rem;color:#2563eb;font-weight:600;"></span>
-                    </div>
-                </div>
-
-                <div class="stats-box">
-                    <div class="stat-item"><div class="label">Total Buzz</div><div class="value" id="totalBuzz">0</div></div>
-                    <div class="stat-item"><div class="label">Rata-rata</div><div class="value" id="avgTime">-</div></div>
-                    <div class="stat-item"><div class="label">Aktif</div><div class="value" id="activeCount">0</div></div>
-                </div>
-
-                <div id="roomInfo" class="hidden" style="background:#f8fafc;border-radius:12px;padding:10px 14px;border-left:4px solid #2563eb;">
-                    <p style="font-weight:600;font-size:0.8rem;">ID Ruangan:</p>
-                    <div class="room-id" id="roomIdDisplay">-</div>
-                    <button id="copyRoomId" class="outline-secondary" style="margin-top:4px;">📋 Salin ID</button>
-                    <p style="font-size:0.7rem;color:#64748b;">Bagikan ke peserta (Format: XX-XXX-XX)</p>
-                </div>
+                <div id="historiList" class="histori-container"></div>
+            </div>
+            <div style="margin-top:15px; border-top:1px solid #334155; padding-top:15px;">
+                <button class="btn btn-primary" id="btnKirimSemua" style="width:100%;">📡 Kirim Update ke Tampilan</button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Projector Overlay -->
-<div id="projectorOverlay">
-    <button class="close-btn" id="closeProjector">✕</button>
-    <div id="projectorContent">
-        <h1>📢 ANTRIAN BUZZER</h1>
-        <div id="projectorTimerDisplay">--</div>
-        <div id="projectorQueue"><div class="projector-empty">⏳ Menunggu...</div></div>
-        <div id="projectorQuestion">
-            <div class="q-target" id="projQTarget"></div>
-            <div class="q-text" id="projQText">Soal</div>
-            <div class="q-options" id="projQOptions"></div>
-            <div class="q-status" id="projQStatus">Menunggu jawaban...</div>
-        </div>
-        <div id="projectorScores">
-            <h2>⭐ SKOR PESERTA</h2>
-            <div id="projectorScoresList"><div class="projector-score-empty">Belum ada skor</div></div>
+    <!-- Modal untuk preview impor -->
+    <div id="importModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h3>📄 Preview Hasil Impor</h3>
+            <div id="previewContent"></div>
+            <div class="btn-group" style="margin-top:20px;">
+                <button class="btn btn-success" id="confirmImport">✅ Gunakan</button>
+                <button class="btn btn-danger" id="cancelImport">❌ Batal</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Notifikasi & Confetti -->
-<div id="buzzNotif" class="buzz-notification"><div class="buzz-name" id="buzzName">👤</div></div>
-<div id="toast"></div>
-<canvas id="confettiCanvas"></canvas>
-
-<script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
-<script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
-<script>
-// ============================================================
-//  HOST + SOAL – IMPLEMENTASI LENGKAP (tanpa Multi-Host, tanpa Chat)
-// ============================================================
-
-// ---- UTILITY ----
-let toastTimer = null;
-function showToast(msg, duration = 2000) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), duration);
-}
-
-function showError(msg, duration = 3000) {
-    const el = document.getElementById('toast');
-    el.textContent = '❌ ' + msg;
-    el.style.background = '#dc2626';
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-        el.classList.remove('show');
-        el.style.background = '#1e293b';
-    }, duration);
-}
-
-let audioCtx = null;
-function getAudio() {
-    if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    return audioCtx;
-}
-function playBell(freq=880, dur=0.4, vol=0.4) {
-    try {
-        const ctx = getAudio();
-        const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(vol, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now+dur);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(now); osc.stop(now+dur);
-    } catch(e) {}
-}
-
-function sanitize(s) {
-    const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;','/':'&#x2F;'};
-    return String(s).replace(/[&<>"'/]/g, m=>map[m]);
-}
-function formatTime(sec) {
-    if (sec<0) sec=0;
-    const m=Math.floor(sec/60), s=Math.floor(sec%60);
-    return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-}
-
-// ---- ROOM CODE GENERATOR ----
-function generateRoomCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const parts = [
-        getRandomChars(chars, 2),
-        getRandomChars(chars, 3),
-        getRandomChars(chars, 2)
-    ];
-    return parts.join('-');
-}
-
-function getRandomChars(chars, length) {
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
-function isValidRoomCode(code) {
-    return /^[A-Z0-9]{2}-[A-Z0-9]{3}-[A-Z0-9]{2}$/.test(code);
-}
-
-// ---- CONFETTI ----
-const canvas = document.getElementById('confettiCanvas');
-const ctx = canvas.getContext('2d');
-let pieces=[], animId=null;
-function resizeCanvas() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-function spawnConfetti(count=60) {
-    const colors=['#f44336','#e91e63','#9c27b0','#3f51b5','#03a9f4','#4caf50','#ffeb3b','#ff9800'];
-    for(let i=0;i<count;i++) {
-        pieces.push({
-            x: Math.random()*canvas.width,
-            y: Math.random()*canvas.height - canvas.height,
-            w: 5+Math.random()*8,
-            h: 5+Math.random()*8,
-            color: colors[Math.floor(Math.random()*colors.length)],
-            vy: 2+Math.random()*4,
-            vx: (Math.random()-0.5)*2,
-            rot: Math.random()*360,
-            rotSpeed: (Math.random()-0.5)*6,
-            life: 1,
-            decay: 0.006+Math.random()*0.012,
-        });
-    }
-    if(!animId) animateConfetti();
-}
-function animateConfetti() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    let alive=false;
-    pieces.forEach(p=>{
-        p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.rot+=p.rotSpeed; p.life-=p.decay;
-        if(p.life>0) {
-            alive=true;
-            ctx.save();
-            ctx.translate(p.x,p.y);
-            ctx.rotate(p.rot*Math.PI/180);
-            ctx.globalAlpha=p.life;
-            ctx.fillStyle=p.color;
-            ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-            ctx.restore();
-        }
-    });
-    pieces=pieces.filter(p=>p.life>0);
-    if(alive) animId=requestAnimationFrame(animateConfetti);
-    else { animId=null; ctx.clearRect(0,0,canvas.width,canvas.height); }
-}
-
-// ---- STATE ----
-const MAX_PARTICIPANTS = 50;
-const AppState = {
-    peer: null,
-    connections: {},
-    whitelist: [],
-    isLocked: false,
-    buzzQueue: [],
-    scores: {},
-    roomPassword: '',
-    buzzHistory: [],
-    peerId: null,
-    timerInterval: null, timerRemaining: 0, timerTarget: 'global',
-    timerStartTime: null, timerDuration: 0,
-    pingInterval: null,
-    showScores: false,
-    showTimers: false,
-    showQueues: false,
-    showProjectorScores: false,
-    round: 1,
-    questions: [],
-    currentQuestionIndex: -1,
-    questionLocked: false,
-    currentQuestionTarget: null,
-    sessionStart: Date.now(),
-};
-
-const deltaInputs = {};
-
-// ---- DOM refs ----
-const $ = id => document.getElementById(id);
-const buatBtn = $('buatRuangan');
-const lockBtn = $('toggleLock');
-const resetBtn = $('resetBuzzer');
-const resetSkorBtn = $('resetScores');
-const resetBabakBtn = $('resetBabak');
-const testBtn = $('testSound');
-const projectorBtn = $('projectorBtn');
-const closeProj = $('closeProjector');
-const roomIdDisplay = $('roomIdDisplay');
-const lockStatus = $('lockStatus');
-const pesertaList = $('participantList');
-const buzzQueueList = $('buzzQueueList');
-const whitelistInput = $('whitelistInput');
-const addWhitelistBtn = $('addWhitelist');
-const whitelistDisplay = $('whitelistDisplay');
-const roomPassword = $('roomPassword');
-const setPassBtn = $('setPassword');
-const timerDuration = $('timerDuration');
-const startTimerBtn = $('startTimer');
-const stopTimerBtn = $('stopTimer');
-const timerDisplay = $('timerDisplay');
-const timerTarget = $('timerTarget');
-const totalBuzz = $('totalBuzz');
-const avgTime = $('avgTime');
-const activeCount = $('activeCount');
-const connectionDot = $('connectionDot');
-const projectorOverlay = $('projectorOverlay');
-const projectorQueue = $('projectorQueue');
-const projectorTimerDisplay = $('projectorTimerDisplay');
-const projectorScores = $('projectorScores');
-const projectorScoresList = $('projectorScoresList');
-const buzzNotif = $('buzzNotif');
-const buzzName = $('buzzName');
-const demoBtn = $('demoBuzz');
-const clearAllBtn = $('clearAllParticipants');
-
-const toggleScoresBtn = $('toggleScores');
-const toggleQueuesBtn = $('toggleQueues');
-const toggleTimersBtn = $('toggleTimers');
-const toggleProjectorScoresBtn = $('toggleProjectorScores');
-const exportBtn = $('exportState');
-const importBtn = $('importState');
-const exportDataBtn = $('exportDataBtn');
-
-const toggleSoalForm = $('toggleSoalForm');
-const importSoalBtn = $('importSoalBtn');
-const soalForm = $('soalForm');
-const qText = $('qText');
-const qType = $('qType');
-const qPoints = $('qPoints');
-const qOptions = $('qOptions');
-const qAnswer = $('qAnswer');
-const addSoalBtn = $('addSoalBtn');
-const cancelSoalBtn = $('cancelSoalBtn');
-const soalList = $('soalList');
-const endQuestionBtn = $('endQuestionBtn');
-const lockBuzzerBtn = $('lockBuzzerForQuestion');
-const unlockBuzzerBtn = $('unlockBuzzerForQuestion');
-const activeQuestionInfo = $('activeQuestionInfo');
-
-const projQuestion = $('projectorQuestion');
-const projQText = $('projQText');
-const projQOptions = $('projQOptions');
-const projQStatus = $('projQStatus');
-const projQTarget = $('projQTarget');
-
-// ---- SAVE / LOAD ----
-function saveState() {
-    try {
-        localStorage.setItem('hostState_v20', JSON.stringify({
-            whitelist: AppState.whitelist,
-            isLocked: AppState.isLocked,
-            buzzQueue: AppState.buzzQueue,
-            scores: AppState.scores,
-            roomPassword: AppState.roomPassword,
-            buzzHistory: AppState.buzzHistory,
-            peerId: AppState.peerId,
-            showScores: AppState.showScores,
-            showTimers: AppState.showTimers,
-            showQueues: AppState.showQueues,
-            showProjectorScores: AppState.showProjectorScores,
-            round: AppState.round,
-            questions: AppState.questions,
-            currentQuestionIndex: AppState.currentQuestionIndex,
-            currentQuestionTarget: AppState.currentQuestionTarget,
-        }));
-    } catch(e) {}
-}
-
-function loadState() {
-    try {
-        const raw = localStorage.getItem('hostState_v20');
-        if (raw) {
-            const d = JSON.parse(raw);
-            for (let k in d) if (k in AppState) AppState[k] = d[k];
-        }
-    } catch(e) {}
-}
-
-// ---- BROADCAST ----
-function broadcast(msg) {
-    for (let id in AppState.connections) {
-        try { AppState.connections[id].conn.send(msg); } catch(e) {}
-    }
-}
-
-// ---- TOGGLE VISIBILITY ----
-function toggleVisibility(target) {
-    if (!AppState.peer) { showToast('Buat ruangan dulu!'); return; }
-    const val = !AppState[target];
-    AppState[target] = val;
-    saveState();
-    broadcast({type:'toggleVisibility', target: target.replace('show','').toLowerCase(), visible: val});
-    updateUI();
-    const label = { showScores:'Skor', showTimers:'Timer', showQueues:'Antrian' }[target] || target;
-    showToast(`${label} ${val ? 'ditampilkan' : 'disembunyikan'} untuk peserta`);
-}
-
-function toggleProjectorScores() {
-    AppState.showProjectorScores = !AppState.showProjectorScores;
-    saveState();
-    broadcast({ type: 'toggleVisibility', target: 'projectorScores', visible: AppState.showProjectorScores });
-    updateUI();
-    showToast(`Skor di proyektor ${AppState.showProjectorScores ? 'ditampilkan' : 'disembunyikan'}`);
-}
-
-// ---- SKOR ----
-function updateScore(name, newValue) {
-    if (!name) return;
-    newValue = parseInt(newValue);
-    if (isNaN(newValue) || newValue < 0) newValue = 0;
-    AppState.scores[name] = newValue;
-    saveState();
-    broadcast({type:'scoreUpdate', scores:AppState.scores});
-    updateUI();
-}
-
-function adjustScore(name, delta) {
-    const current = AppState.scores[name] || 0;
-    const newVal = Math.max(0, current + delta);
-    updateScore(name, newVal);
-    showToast(`${name} → ${newVal} (${delta >= 0 ? '+' : ''}${delta})`);
-}
-
-function resetBuzzerQueue() {
-    AppState.buzzQueue = [];
-    AppState.isLocked = false;
-    AppState.questionLocked = false;
-    stopTimer();
-    for (let key in AppState.connections) AppState.connections[key].buzzed = false;
-    updateUI();
-    saveState();
-    broadcast({ type: 'reset' });
-    broadcast({ type: 'lockStatus', locked: false });
-    broadcast({ type: 'queueUpdate', queue: [] });
-    playBell(300, 0.25, 0.3);
-    showToast('🔄 Antrian direset');
-}
-
-// ---- UPDATE UI ----
-let showAllParticipants = false;
-function updateUI() {
-    const currentDeltaValues = {};
-    document.querySelectorAll('input[id^="delta_"]').forEach(inp => {
-        currentDeltaValues[inp.id] = inp.value;
-    });
-
-    const allIds = Object.keys(AppState.connections);
-    const limit = 10;
-    const idsToShow = showAllParticipants ? allIds : allIds.slice(0, limit);
-
-    if (allIds.length === 0) {
-        pesertaList.innerHTML = '<p style="color:#94a3b8;font-size:0.8rem;">Belum ada peserta</p>';
-    } else {
-        let html = '';
-        idsToShow.forEach(id => {
-            const c = AppState.connections[id];
-            const name = c.name || 'Tanpa Nama';
-            const online = c.online !== false;
-            const buzzed = AppState.buzzQueue.some(item => item.connId === id);
-            const score = AppState.scores[name] || 0;
-            const inputId = 'delta_'+id.replace(/[^a-zA-Z0-9]/g,'_');
-            const deltaVal = currentDeltaValues[inputId] || '1';
-            html += `
-                <div class="participant-item" data-id="${id}">
-                    <span class="name">
-                        ${sanitize(name)}
-                        <span class="online-dot ${online?'online':'offline'}"></span>
-                        <span class="score-badge" data-action="editScore" data-name="${sanitize(name)}" title="Klik untuk ubah skor">⭐ ${score}</span>
-                    </span>
-                    <span style="display:flex;gap:2px;flex-wrap:wrap;align-items:center;">
-                        <span style="font-size:0.7rem;">${buzzed?'✅':'⏳'}</span>
-                        <input type="number" id="${inputId}" value="${deltaVal}" min="1" style="width:40px;padding:2px 4px;border:1px solid #d1d9e6;border-radius:4px;text-align:center;font-size:0.7rem;min-height:24px;" />
-                        <button class="success" data-action="score" data-id="${id}" data-d="1" style="min-height:24px;min-width:24px;font-size:0.6rem;">+</button>
-                        <button class="danger" data-action="score" data-id="${id}" data-d="-1" style="min-height:24px;min-width:24px;font-size:0.6rem;">−</button>
-                        <button class="danger" data-action="kick" data-id="${id}" style="min-height:24px;min-width:28px;font-size:0.6rem;">✖</button>
-                    </span>
-                </div>
-            `;
-        });
-        if (allIds.length > limit && !showAllParticipants) {
-            html += `<button id="showAllBtn" class="outline-secondary" style="width:100%;margin-top:4px;">Lihat semua (${allIds.length})</button>`;
-        } else if (allIds.length > limit && showAllParticipants) {
-            html += `<button id="showLessBtn" class="outline-secondary" style="width:100%;margin-top:4px;">Sembunyikan</button>`;
-        }
-        pesertaList.innerHTML = html;
-        document.querySelectorAll('input[id^="delta_"]').forEach(inp => {
-            const val = currentDeltaValues[inp.id];
-            if (val !== undefined) inp.value = val;
-            inp.addEventListener('input', function() {
-                deltaInputs[this.id] = this.value;
-            });
-            if (!deltaInputs[inp.id]) deltaInputs[inp.id] = inp.value;
-        });
-        document.getElementById('showAllBtn')?.addEventListener('click', () => { showAllParticipants = true; updateUI(); });
-        document.getElementById('showLessBtn')?.addEventListener('click', () => { showAllParticipants = false; updateUI(); });
-    }
-
-    // Antrian
-    if (AppState.buzzQueue.length===0) {
-        buzzQueueList.innerHTML = '<p style="color:#94a3b8;font-size:0.8rem;">Belum ada yang buzz</p>';
-    } else {
-        let html = '<ol>';
-        AppState.buzzQueue.forEach((item, idx) => {
-            const pos = idx+1;
-            let cls = '';
-            if (pos===1) cls = 'first-place';
-            else if (pos===2) cls = 'gold';
-            else if (pos===3) cls = 'silver';
-            else if (pos===4) cls = 'bronze';
-            const rank = pos===1 ? '🏆' : (pos===2 ? '🥈' : (pos===3 ? '🥉' : `#${pos}`));
-            html += `<li class="${cls}" data-index="${idx}"><span>${rank} ${sanitize(item.name)}</span> <span style="font-size:0.7rem;color:#64748b;">(${item.time})</span></li>`;
-        });
-        html += '</ol>';
-        buzzQueueList.innerHTML = html;
-    }
-
-    lockStatus.textContent = AppState.isLocked ? '🔒 Terkunci' : '🔓 Terbuka';
-    lockBtn.textContent = AppState.isLocked ? '🔓 Buka' : '🔒 Kunci';
-    lockBtn.className = AppState.isLocked ? 'outline-success' : 'outline-warning';
-    roomPassword.value = AppState.roomPassword ? '(tersimpan)' : '';
-
-    // Timer target
-    const curTarget = timerTarget.value;
-    timerTarget.innerHTML = '<option value="global">🌍 Global</option>';
-    Object.values(AppState.connections).forEach(c => {
-        if (c.name) {
-            const opt = document.createElement('option');
-            opt.value = c.name;
-            opt.textContent = c.name;
-            timerTarget.appendChild(opt);
-        }
-    });
-    if (curTarget && Object.values(AppState.connections).some(c=>c.name===curTarget)) timerTarget.value = curTarget;
-    else timerTarget.value = 'global';
-
-    totalBuzz.textContent = AppState.buzzHistory.length;
-    const active = Object.values(AppState.connections).filter(c=>c.online!==false).length;
-    activeCount.textContent = active;
-    if (AppState.buzzHistory.length > 1) {
-        const timestamps = AppState.buzzHistory.map(item => item.timestamp).sort((a,b)=>a-b);
-        let diffs = [];
-        for (let i=1; i<timestamps.length; i++) diffs.push(timestamps[i]-timestamps[i-1]);
-        if (diffs.length>0) {
-            const avg = diffs.reduce((a,b)=>a+b,0)/diffs.length;
-            avgTime.textContent = Math.round(avg/1000)+'s';
-        } else avgTime.textContent = '-';
-    } else avgTime.textContent = '-';
-
-    if (AppState.peerId) {
-        roomIdDisplay.textContent = AppState.peerId;
-        document.getElementById('roomInfo').classList.remove('hidden');
-    } else {
-        document.getElementById('roomInfo').classList.add('hidden');
-    }
-
-    // Toggle button state
-    toggleScoresBtn.className = AppState.showScores ? 'toggle-on' : 'toggle-off';
-    toggleScoresBtn.textContent = AppState.showScores ? '⭐ Skor' : '⭐ Skor (sembunyi)';
-    toggleQueuesBtn.className = AppState.showQueues ? 'toggle-on' : 'toggle-off';
-    toggleQueuesBtn.textContent = AppState.showQueues ? '📢 Antrian' : '📢 Antrian (sembunyi)';
-    toggleTimersBtn.className = AppState.showTimers ? 'toggle-on' : 'toggle-off';
-    toggleTimersBtn.textContent = AppState.showTimers ? '⏱ Timer' : '⏱ Timer (sembunyi)';
-    toggleProjectorScoresBtn.className = AppState.showProjectorScores ? 'toggle-on' : 'toggle-off';
-    toggleProjectorScoresBtn.textContent = AppState.showProjectorScores ? '📊 Skor Overlay' : '📊 Skor Overlay (sembunyi)';
-
-    if (AppState.showProjectorScores) projectorScores.classList.add('visible');
-    else projectorScores.classList.remove('visible');
-
-    if (projectorOverlay.classList.contains('active')) updateProjector();
-
-    if (AppState.timerRemaining>0) timerDisplay.textContent = formatTime(AppState.timerRemaining);
-    else timerDisplay.textContent = '--';
-
-    renderSoalList();
-    updateSoalControls();
-    updateActiveQuestionInfo();
-}
-
-// ---- PROJECTOR ----
-function updateProjector() {
-    const q = AppState.buzzQueue;
-    if (q.length===0) {
-        projectorQueue.innerHTML = '<div class="projector-empty">⏳ Menunggu...</div>';
-    } else {
-        let html = '';
-        q.forEach((item, idx) => {
-            const pos = idx+1;
-            const cls = pos===1 ? 'projector-item first' : 'projector-item';
-            const rank = pos===1 ? '🏆' : '#'+pos;
-            html += `<div class="${cls}"><span>${rank}</span><span>${sanitize(item.name)}</span></div>`;
-        });
-        projectorQueue.innerHTML = html;
-    }
-
-    if (AppState.timerInterval && AppState.timerDuration>0 && AppState.timerStartTime) {
-        const elapsed = (Date.now() - AppState.timerStartTime)/1000;
-        const remaining = Math.max(0, AppState.timerDuration - elapsed);
-        const sec = Math.ceil(remaining);
-        if (sec>0) {
-            projectorTimerDisplay.textContent = formatTime(sec);
-            projectorTimerDisplay.style.display = 'block';
-        } else {
-            projectorTimerDisplay.style.display = 'none';
-        }
-    } else {
-        projectorTimerDisplay.style.display = 'none';
-    }
-
-    const allNames = Object.keys(AppState.scores);
-    if (allNames.length === 0) {
-        projectorScoresList.innerHTML = '<div class="projector-score-empty">Belum ada skor</div>';
-    } else {
-        let html = '';
-        allNames.sort((a,b) => (AppState.scores[b]||0) - (AppState.scores[a]||0));
-        allNames.forEach(name => {
-            const score = AppState.scores[name] || 0;
-            html += `<div class="projector-score-item">
-                        <span class="pname">${sanitize(name)}</span>
-                        <span class="pscore">${score}</span>
-                    </div>`;
-        });
-        projectorScoresList.innerHTML = html;
-    }
-
-    const idx = AppState.currentQuestionIndex;
-    if (idx >= 0 && idx < AppState.questions.length) {
-        const qData = AppState.questions[idx];
-        projQuestion.classList.add('active');
-        projQText.textContent = qData.text;
-        projQTarget.textContent = AppState.currentQuestionTarget ? '🎯 Untuk: ' + AppState.currentQuestionTarget : '🌍 Global';
-        if (qData.type === 'pilihan_ganda' && qData.options && qData.options.length) {
-            let optHtml = '';
-            const letters = ['A','B','C','D','E','F'];
-            qData.options.forEach((opt, i) => {
-                optHtml += `<span class="opt">${letters[i] || (i+1)}. ${sanitize(opt)}</span>`;
-            });
-            projQOptions.innerHTML = optHtml;
-        } else {
-            projQOptions.innerHTML = '';
-        }
-        if (qData.answered) {
-            const correctText = qData.isCorrect ? '✅ Benar' : '❌ Salah';
-            projQStatus.innerHTML = `<span class="q-answerer">${sanitize(qData.answerer || '')}</span> menjawab: ${correctText} (${qData.points} poin)`;
-        } else {
-            projQStatus.textContent = '⏳ Menunggu jawaban...';
-        }
-    } else {
-        projQuestion.classList.remove('active');
-    }
-}
-
-// ---- TIMER ----
-function startTimer(seconds, target) {
-    if (AppState.timerInterval) clearInterval(AppState.timerInterval);
-    let targetConnId = null;
-    if (target !== 'global') {
-        for (let id in AppState.connections) {
-            if (AppState.connections[id].name === target) { targetConnId = id; break; }
-        }
-        if (!targetConnId) { showToast('Peserta tidak ditemukan.'); return; }
-    }
-    const startTime = Date.now();
-    AppState.timerStartTime = startTime;
-    AppState.timerDuration = seconds;
-    AppState.timerTarget = target;
-
-    if (target === 'global') {
-        broadcast({type:'timerGlobalStart', duration:seconds, startTime});
-    } else {
-        const conn = AppState.connections[targetConnId]?.conn;
-        if (conn) conn.send({type:'timerStart', duration:seconds, startTime});
-        else { showToast('Koneksi tidak valid.'); return; }
-    }
-
-    if (!projectorOverlay.classList.contains('active')) openProjector();
-    stopTimerBtn.disabled = false;
-    startTimerBtn.disabled = true;
-
-    AppState.timerInterval = setInterval(() => {
-        const elapsed = (Date.now() - AppState.timerStartTime)/1000;
-        const remaining = AppState.timerDuration - elapsed;
-        if (remaining <= 0) {
-            clearInterval(AppState.timerInterval);
-            AppState.timerInterval = null;
-            AppState.timerRemaining = 0;
-            stopTimerBtn.disabled = true;
-            startTimerBtn.disabled = false;
-            playBell(440,0.8,0.5);
-            if (target === 'global') {
-                broadcast({type:'timerGlobalEnd'});
-                projectorTimerDisplay.textContent = '⏰ WAKTU HABIS!';
-                projectorTimerDisplay.style.color = '#ef4444';
-                projectorTimerDisplay.style.fontSize = '4rem';
-                projectorTimerDisplay.style.display = 'block';
-                setTimeout(() => {
-                    projectorTimerDisplay.style.display = 'none';
-                    projectorTimerDisplay.style.color = '#facc15';
-                    projectorTimerDisplay.style.fontSize = '3rem';
-                }, 5000);
-            } else {
-                const conn = AppState.connections[targetConnId]?.conn;
-                if (conn) conn.send({type:'timerEnd'});
-            }
-            AppState.timerTarget = 'global';
-            AppState.timerStartTime = null;
-            AppState.timerDuration = 0;
-            updateUI();
-            updateProjector();
-            showToast('⏰ Timer habis!');
-        } else {
-            AppState.timerRemaining = Math.ceil(remaining);
-            timerDisplay.textContent = formatTime(AppState.timerRemaining);
-            if (projectorOverlay.classList.contains('active')) {
-                projectorTimerDisplay.textContent = formatTime(AppState.timerRemaining);
-                projectorTimerDisplay.style.display = 'block';
-            }
-            broadcast({ type: 'timerUpdate', remaining: AppState.timerRemaining });
-        }
-    }, 1000);
-}
-
-function stopTimer() {
-    if (AppState.timerInterval) { clearInterval(AppState.timerInterval); AppState.timerInterval = null; }
-    stopTimerBtn.disabled = true;
-    startTimerBtn.disabled = false;
-    AppState.timerRemaining = 0;
-    AppState.timerDuration = 0;
-    AppState.timerStartTime = null;
-    if (AppState.timerTarget === 'global') broadcast({type:'timerGlobalStop'});
-    else {
-        for (let id in AppState.connections) {
-            if (AppState.connections[id].name === AppState.timerTarget) {
-                try { AppState.connections[id].conn.send({type:'timerStop'}); } catch(e) {}
-                break;
-            }
-        }
-    }
-    AppState.timerTarget = 'global';
-    updateUI();
-    updateProjector();
-    showToast('⏹ Timer dihentikan');
-}
-
-// ---- PROJECTOR OPEN/CLOSE ----
-function openProjector() {
-    projectorOverlay.classList.add('active');
-    updateProjector();
-}
-function closeProjector() {
-    projectorOverlay.classList.remove('active');
-}
-
-// ---- PEERJS HOST ----
-function cleanupRoomCode(roomId) {
-    const activeRooms = JSON.parse(localStorage.getItem('activeRooms') || '{}');
-    delete activeRooms[roomId];
-    localStorage.setItem('activeRooms', JSON.stringify(activeRooms));
-}
-
-function initHost() {
-    if (AppState.peer) { AppState.peer.destroy(); AppState.peer = null; }
-    let id = AppState.peerId;
-    if (!id || !isValidRoomCode(id)) {
-        id = generateRoomCode();
-        AppState.peerId = id;
-        saveState();
-    }
-    
-    const activeRooms = JSON.parse(localStorage.getItem('activeRooms') || '{}');
-    activeRooms[id] = { created: Date.now(), host: 'active' };
-    localStorage.setItem('activeRooms', JSON.stringify(activeRooms));
-    
-    console.log('🚀 Initiating host with code:', id);
-    AppState.peer = new Peer(id, {
-        debug: 3,
-        config: { iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-            { urls: 'turn:turn.anyfirewall.com:443?transport=tcp', username: 'webrtc', credential: 'webrtc' },
-            { urls: 'turn:turn.anyfirewall.com:80?transport=udp', username: 'webrtc', credential: 'webrtc' }
-        ]}
-    });
-    AppState.peer.on('open', (id) => {
-        console.log('✅ Peer open, ID:', id);
-        roomIdDisplay.textContent = id;
-        document.getElementById('roomInfo').classList.remove('hidden');
-        buatBtn.disabled = true;
-        buatBtn.textContent = '✅ Ruang Aktif';
-        showToast('Ruangan aktif! ID: ' + id);
-        if (AppState.pingInterval) clearInterval(AppState.pingInterval);
-        AppState.pingInterval = setInterval(() => {
-            const now = Date.now();
-            broadcast({type:'ping', time:now});
-            for (let key in AppState.connections) {
-                AppState.connections[key].lastPing = now;
-                AppState.connections[key].pongReceived = false;
-            }
-            setTimeout(() => {
-                let allOk = true;
-                for (let key in AppState.connections) {
-                    const c = AppState.connections[key];
-                    if (!c.pongReceived && c.lastPing === now) { c.online = false; allOk = false; }
-                    else c.online = true;
-                }
-                connectionDot.style.background = allOk ? '#22c55e' : '#ef4444';
-                updateUI();
-            }, 2000);
-        }, 5000);
-    });
-    AppState.peer.on('connection', (conn) => {
-        const connId = conn.peer;
-        console.log('📥 Koneksi masuk dari:', connId);
-        AppState.connections[connId] = { conn, name: null, online: true, buzzed: false, lastPing: 0, pongReceived: false };
-        conn.on('data', (data) => handleHostData(connId, data));
-        conn.on('close', () => {
-            console.log('🔌 Koneksi ditutup:', connId);
-            AppState.connections[connId].online = false;
-            updateUI();
-        });
-        // Kirim state awal ke peserta
-        conn.send({type:'lockStatus', locked:AppState.isLocked});
-        conn.send({type:'scoreUpdate', scores:AppState.scores});
-        conn.send({type:'whitelistUpdate', list:AppState.whitelist});
-        conn.send({type:'queueUpdate', queue:AppState.buzzQueue.map((item,idx)=>({name:item.name,position:idx+1}))});
-        conn.send({type:'toggleVisibility', target:'scores', visible:AppState.showScores});
-        conn.send({type:'toggleVisibility', target:'timers', visible:AppState.showTimers});
-        conn.send({type:'toggleVisibility', target:'queues', visible:AppState.showQueues});
-        conn.send({type:'toggleVisibility', target:'projectorScores', visible:AppState.showProjectorScores});
-        if (AppState.currentQuestionIndex >= 0 && AppState.currentQuestionIndex < AppState.questions.length) {
-            const q = AppState.questions[AppState.currentQuestionIndex];
-            conn.send({type:'showQuestion', question: q, target: AppState.currentQuestionTarget});
-            // TIDAK mengunci buzzer otomatis
-        }
-        console.log('📤 State awal dikirim ke', connId);
-    });
-    AppState.peer.on('error', (err) => {
-        console.error('❌ Peer error:', err);
-        showError('Error host: ' + err.message + '. Refresh dan buat ulang.');
-    });
-}
-
-function handleHostData(connId, data) {
-    try {
-        const connObj = AppState.connections[connId];
-        if (!connObj) {
-            console.warn('⚠️ Data dari koneksi yang tidak dikenal:', connId);
-            return;
-        }
-        console.log('📩 Data dari', connId, ':', data);
-        
-        if (data.type === 'pong') {
-            connObj.pongReceived = true;
-            connObj.online = true;
-            let allOk = true;
-            for (let key in AppState.connections) if (AppState.connections[key].online === false) allOk = false;
-            connectionDot.style.background = allOk ? '#22c55e' : '#ef4444';
-            updateUI();
-            return;
-        }
-        if (data.type === 'register') {
-            if (Object.keys(AppState.connections).length >= MAX_PARTICIPANTS) {
-                connObj.conn.send({type:'registered', success:false, reason:'Ruangan penuh (maksimal '+MAX_PARTICIPANTS+' peserta)'});
-                connObj.conn.close();
-                delete AppState.connections[connId];
-                updateUI();
-                showToast('Ruangan penuh!');
-                return;
-            }
-            const name = sanitize(data.name.trim() || 'Tanpa Nama');
-            const hashedPass = data.password || '';
-            if (AppState.roomPassword && AppState.roomPassword !== hashedPass) {
-                connObj.conn.send({type:'registered', success:false, reason:'Password salah'});
-                connObj.conn.close();
-                delete AppState.connections[connId];
-                updateUI();
-                showToast(`Gagal daftar: Password salah`);
-                return;
-            }
-            if (!AppState.whitelist.includes(name)) {
-                connObj.conn.send({type:'registered', success:false, reason:'Nama tidak terdaftar di whitelist'});
-                connObj.conn.close();
-                delete AppState.connections[connId];
-                updateUI();
-                showToast(`Gagal daftar: ${name} tidak ada di whitelist`);
-                return;
-            }
-            let duplicate = false;
-            for (let key in AppState.connections) {
-                if (AppState.connections[key].name === name && key !== connId) {
-                    duplicate = true;
-                    break;
-                }
-            }
-            if (duplicate) {
-                connObj.conn.send({type:'registered', success:false, reason:'Nama sudah digunakan, silakan ganti'});
-                connObj.conn.close();
-                delete AppState.connections[connId];
-                updateUI();
-                saveState();
-                showToast(`Nama ${name} sudah dipakai peserta lain`);
-                return;
-            }
-            connObj.name = name;
-            connObj.buzzed = false;
-            if (!AppState.scores[name]) AppState.scores[name] = 0;
-            updateUI();
-            connObj.conn.send({type:'registered', success:true});
-            connObj.conn.send({type:'scoreUpdate', scores:AppState.scores});
-            connObj.conn.send({type:'queueUpdate', queue:AppState.buzzQueue.map((item,idx)=>({name:item.name,position:idx+1}))});
-            connObj.conn.send({type:'toggleVisibility', target:'scores', visible:AppState.showScores});
-            connObj.conn.send({type:'toggleVisibility', target:'timers', visible:AppState.showTimers});
-            connObj.conn.send({type:'toggleVisibility', target:'queues', visible:AppState.showQueues});
-            connObj.conn.send({type:'toggleVisibility', target:'projectorScores', visible:AppState.showProjectorScores});
-            if (AppState.currentQuestionIndex >= 0 && AppState.currentQuestionIndex < AppState.questions.length) {
-                const q = AppState.questions[AppState.currentQuestionIndex];
-                connObj.conn.send({type:'showQuestion', question: q, target: AppState.currentQuestionTarget});
-                // Tidak mengunci buzzer
-            }
-            saveState();
-            broadcast({type:'queueUpdate', queue:AppState.buzzQueue.map((item,idx)=>({name:item.name,position:idx+1}))});
-            showToast(`✅ ${name} bergabung`);
-            console.log('✅ Peserta terdaftar:', name);
-            return;
-        }
-        if (data.type === 'buzz') {
-            if (AppState.isLocked || AppState.questionLocked) {
-                connObj.conn.send({type:'buzzResult', success:false, reason:'Buzzer terkunci'});
-                return;
-            }
-            if (connObj.buzzed) {
-                connObj.conn.send({type:'buzzResult', success:false, reason:'Sudah buzz'});
-                return;
-            }
-            const name = connObj.name || 'Peserta';
-            const time = new Date().toLocaleTimeString();
-            const timestamp = Date.now();
-            AppState.buzzQueue.push({connId, name, time, timestamp});
-            connObj.buzzed = true;
-            AppState.buzzHistory.push({name, time, timestamp, connId, round: AppState.round});
-            localStorage.setItem('buzzHistory', JSON.stringify(AppState.buzzHistory));
-            updateUI();
-            saveState();
-            playBell(880,0.4,0.5);
-            buzzName.textContent = sanitize(name);
-            buzzNotif.classList.add('active');
-            setTimeout(()=>buzzNotif.classList.remove('active'), 2500);
-            spawnConfetti(60);
-            connObj.conn.send({type:'buzzResult', success:true, position:AppState.buzzQueue.length});
-            broadcast({type:'queueUpdate', queue:AppState.buzzQueue.map((item,idx)=>({name:item.name,position:idx+1}))});
-            connObj.conn.send({type:'confetti'});
-            showToast(`🔊 ${name} buzz!`);
-            return;
-        }
-        if (data.type === 'testSoundResponse') { /* ignore */ }
-        if (data.type === 'registerProjector') {
-            console.log('📺 Proyektor terhubung:', connId);
-            return;
-        }
-    } catch(e) {
-        console.error('Error handling data dari peserta:', e);
-        showError('Error internal: ' + e.message);
-    }
-}
-
-// ---- WHITELIST ----
-function addWhitelist(name) {
-    name = name.trim();
-    if (!name) return;
-    const safe = sanitize(name);
-    if (!AppState.whitelist.includes(safe)) {
-        AppState.whitelist.push(safe);
-        renderWhitelist();
-        saveState();
-        broadcast({type:'whitelistUpdate', list:AppState.whitelist});
-        showToast(`${safe} ditambahkan ke whitelist`);
-    }
-    whitelistInput.value = '';
-}
-
-function removeWhitelist(name) {
-    AppState.whitelist = AppState.whitelist.filter(n => n !== name);
-    renderWhitelist();
-    saveState();
-    broadcast({type:'whitelistUpdate', list:AppState.whitelist});
-    showToast(`${name} dihapus dari whitelist`);
-}
-
-function renderWhitelist() {
-    if (AppState.whitelist.length===0) {
-        whitelistDisplay.innerHTML = '<div style="color:#94a3b8;font-size:0.75rem;text-align:center;">Belum ada nama</div>';
-        return;
-    }
-    let html = '';
-    AppState.whitelist.forEach(name => {
-        html += `<div class="whitelist-item"><span>${name}</span><button class="del-btn" data-name="${name}">✕</button></div>`;
-    });
-    whitelistDisplay.innerHTML = html;
-    whitelistDisplay.querySelectorAll('.del-btn').forEach(btn => {
-        btn.addEventListener('click', ()=>removeWhitelist(btn.dataset.name));
-    });
-}
-
-// ---- RESET FUNCTIONS ----
-function resetAllScores() {
-    if (!confirm('⚠️ Reset semua skor ke 0? Lanjutkan?')) return;
-    for (let key in AppState.scores) AppState.scores[key] = 0;
-    saveState();
-    broadcast({type:'scoreUpdate', scores:AppState.scores});
-    updateUI();
-    showToast('Skor direset');
-}
-
-function resetBabak() {
-    if (!confirm('⚠️ Mode Babak: reset antrian, skor, timer, status buzz. Lanjutkan?')) return;
-    AppState.buzzQueue = [];
-    for (let key in AppState.scores) AppState.scores[key] = 0;
-    stopTimer();
-    if (AppState.currentQuestionIndex >= 0) endCurrentQuestion();
-    broadcast({type:'babakReset'});
-    broadcast({type:'queueUpdate', queue:[]});
-    broadcast({type:'scoreUpdate', scores:AppState.scores});
-    AppState.isLocked = false;
-    AppState.questionLocked = false;
-    broadcast({type:'lockStatus', locked:false});
-    for (let key in AppState.connections) AppState.connections[key].buzzed = false;
-    AppState.round++;
-    saveState();
-    updateUI();
-    playBell(500,0.4,0.4);
-    showToast('🔄 Babak direset');
-}
-
-let demoCounter = 0;
-function demoBuzz() {
-    if (!AppState.peer) { showToast('Buat ruangan dulu!'); return; }
-    demoCounter++;
-    const fakeName = `Demo-${demoCounter}`;
-    const time = new Date().toLocaleTimeString();
-    const timestamp = Date.now();
-    AppState.buzzQueue.push({connId: 'demo-' + demoCounter, name: fakeName, time, timestamp});
-    AppState.buzzHistory.push({name: fakeName, time, timestamp, connId:'demo', round:AppState.round});
-    localStorage.setItem('buzzHistory', JSON.stringify(AppState.buzzHistory));
-    updateUI();
-    saveState();
-    playBell(880,0.4,0.5);
-    buzzName.textContent = sanitize(fakeName);
-    buzzNotif.classList.add('active');
-    setTimeout(()=>buzzNotif.classList.remove('active'), 2500);
-    spawnConfetti(60);
-    broadcast({type:'queueUpdate', queue:AppState.buzzQueue.map((item,idx)=>({name:item.name,position:idx+1}))});
-    showToast(`🎮 Demo buzz: ${fakeName}`);
-}
-
-function clearAllParticipants() {
-    if (!confirm('⚠️ Hapus semua peserta dari ruangan? Lanjutkan?')) return;
-    const ids = Object.keys(AppState.connections);
-    ids.forEach(id => {
-        try { AppState.connections[id].conn.send({type:'kicked'}); AppState.connections[id].conn.close(); } catch(e) {}
-        delete AppState.connections[id];
-    });
-    AppState.buzzQueue = [];
-    updateUI();
-    saveState();
-    broadcast({type:'queueUpdate', queue:[]});
-    showToast('Semua peserta telah dihapus');
-}
-
-// ---- EKSPOR / IMPOR STATE ----
-function exportState() {
-    const state = {
-        whitelist: AppState.whitelist,
-        scores: AppState.scores,
-        buzzHistory: AppState.buzzHistory,
-        roomPassword: AppState.roomPassword,
-        peerId: AppState.peerId,
-        round: AppState.round,
-        showScores: AppState.showScores,
-        showTimers: AppState.showTimers,
-        showQueues: AppState.showQueues,
-        showProjectorScores: AppState.showProjectorScores,
-        questions: AppState.questions,
-        currentQuestionIndex: AppState.currentQuestionIndex,
-        currentQuestionTarget: AppState.currentQuestionTarget,
-    };
-    const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'buzzer-state.json';
-    a.click();
-    showToast('State berhasil diekspor');
-}
-
-function importState() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                const data = JSON.parse(ev.target.result);
-                for (let k in data) {
-                    if (k in AppState) AppState[k] = data[k];
-                }
-                saveState();
-                renderWhitelist();
-                renderSoalList();
-                updateUI();
-                broadcast({type:'scoreUpdate', scores:AppState.scores});
-                broadcast({type:'whitelistUpdate', list:AppState.whitelist});
-                showToast('✅ State berhasil diimpor!');
-            } catch(err) {
-                showError('File tidak valid');
-            }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-
-// ---- EXPORT DATA TO SPREADSHEET ----
-function prepareExportData() {
-    const participants = Object.keys(AppState.connections).map(id => {
-        const conn = AppState.connections[id];
-        const name = conn.name || 'Unknown';
-        const score = AppState.scores[name] || 0;
-        const buzzCount = AppState.buzzHistory.filter(b => b.name === name).length;
-        const fastest = AppState.buzzHistory
-            .filter(b => b.name === name)
-            .sort((a, b) => a.timestamp - b.timestamp)[0];
-        let correct = 0, wrong = 0;
-        AppState.questions.forEach(q => {
-            if (q.answerer === name) {
-                if (q.isCorrect) correct++;
-                else wrong++;
-            }
-        });
-        return { name, score, totalBuzz: buzzCount, fastestTime: fastest ? fastest.time : '-', correctAnswers: correct, wrongAnswers: wrong };
-    });
-    if (participants.length === 0) {
-        showToast('Tidak ada data untuk diekspor');
-        return null;
-    }
-    const scores = participants.map(p => p.score);
-    const avgScore = scores.length > 0 ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(2) : 0;
-    return {
-        participants,
-        totalQuestions: AppState.questions.length,
-        totalBuzz: AppState.buzzHistory.length,
-        averageScore: avgScore,
-        highestScore: Math.max(...scores, 0),
-        lowestScore: Math.min(...scores, 0),
-        buzzHistory: AppState.buzzHistory,
-        duration: formatTime((Date.now() - AppState.sessionStart) / 1000)
-    };
-}
-
-function downloadFile(data, filename, mimeType) {
-    const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function loadXLSXLibrary(callback) {
-    if (typeof XLSX !== 'undefined') { callback(); return; }
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    script.onload = callback;
-    script.onerror = () => showError('Gagal memuat library Excel');
-    document.head.appendChild(script);
-}
-
-function exportToCSV() {
-    const data = prepareExportData();
-    if (!data) return;
-    const headers = ['Rank', 'Nama Tim', 'Skor', 'Total Buzz', 'Waktu Tercepat', 'Jawaban Benar', 'Jawaban Salah'];
-    let csv = headers.join(',') + '\n';
-    const sorted = data.participants.sort((a, b) => b.score - a.score);
-    sorted.forEach((p, index) => {
-        const row = [index + 1, `"${p.name}"`, p.score, p.totalBuzz || 0, p.fastestTime || '-', p.correctAnswers || 0, p.wrongAnswers || 0];
-        csv += row.join(',') + '\n';
-    });
-    csv += '\n';
-    csv += `"Total Peserta",${data.participants.length}\n`;
-    csv += `"Total Soal",${data.totalQuestions}\n`;
-    csv += `"Total Buzz",${data.totalBuzz}\n`;
-    csv += `"Rata-rata Skor",${data.averageScore}\n`;
-    csv += `"Skor Tertinggi",${data.highestScore}\n`;
-    csv += `"Skor Terendah",${data.lowestScore}\n`;
-    csv += `"Durasi Sesi",${data.duration}\n`;
-    csv += `"Tanggal",${new Date().toLocaleString()}\n`;
-    downloadFile(csv, 'buzzer_data.csv', 'text/csv');
-    showToast('📊 Data berhasil diekspor ke CSV!');
-}
-
-function exportToExcel() {
-    loadXLSXLibrary(() => {
-        const data = prepareExportData();
-        if (!data) return;
-        const wb = XLSX.utils.book_new();
-        
-        // Sheet 1: Skor
-        const scoreData = [['Rank', 'Nama Tim', 'Skor', 'Total Buzz', 'Waktu Tercepat', 'Jawaban Benar', 'Jawaban Salah']];
-        const sorted = data.participants.sort((a, b) => b.score - a.score);
-        sorted.forEach((p, index) => {
-            scoreData.push([index + 1, p.name, p.score, p.totalBuzz || 0, p.fastestTime || '-', p.correctAnswers || 0, p.wrongAnswers || 0]);
-        });
-        const ws1 = XLSX.utils.aoa_to_sheet(scoreData);
-        XLSX.utils.book_append_sheet(wb, ws1, 'Skor');
-        
-        // Sheet 2: Riwayat Buzz
-        const buzzData = [['Waktu', 'Nama', 'Round', 'Timestamp']];
-        data.buzzHistory.forEach(b => {
-            buzzData.push([b.time, b.name, b.round || 1, b.timestamp || '']);
-        });
-        const ws2 = XLSX.utils.aoa_to_sheet(buzzData);
-        XLSX.utils.book_append_sheet(wb, ws2, 'Riwayat Buzz');
-        
-        // Sheet 3: Statistik
-        const statsData = [
-            ['Statistik', 'Nilai'],
-            ['Total Peserta', data.participants.length],
-            ['Total Soal', data.totalQuestions],
-            ['Total Buzz', data.totalBuzz],
-            ['Rata-rata Skor', data.averageScore],
-            ['Skor Tertinggi', data.highestScore],
-            ['Skor Terendah', data.lowestScore],
-            ['Durasi Sesi', data.duration],
-            ['Tanggal', new Date().toLocaleString()]
+    <script>
+        // ======================== STATE ========================
+        const PAKET_IDS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+        let tim = [
+            { nama: 'Tim A', skor: 0 },
+            { nama: 'Tim B', skor: 0 },
+            { nama: 'Tim C', skor: 0 },
+            { nama: 'Tim D', skor: 0 }
         ];
-        const ws3 = XLSX.utils.aoa_to_sheet(statsData);
-        XLSX.utils.book_append_sheet(wb, ws3, 'Statistik');
-        
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([wbout], { type: 'application/octet-stream' });
-        downloadFile(blob, 'buzzer_data.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        showToast('📊 Data berhasil diekspor ke Excel!');
-    });
-}
 
-function showExportOptions() {
-    const choice = confirm('Pilih format:\n- OK untuk CSV\n- Cancel untuk Excel');
-    if (choice) {
-        exportToCSV();
-    } else {
-        exportToExcel();
-    }
-}
+        let paketSoal = {};
+        PAKET_IDS.forEach(p => paketSoal[p] = []);
 
-// ---- SOAL FUNCTIONS ----
-function addQuestion() {
-    const text = qText.value.trim();
-    const type = qType.value;
-    const points = parseInt(qPoints.value) || 10;
-    const optionsRaw = qOptions.value.trim();
-    const answer = qAnswer.value.trim();
-    if (!text) { showToast('Teks soal wajib diisi'); return; }
-    if (!answer) { showToast('Jawaban benar wajib diisi'); return; }
-    let options = [];
-    if (type === 'pilihan_ganda') {
-        options = optionsRaw.split(',').map(s=>s.trim()).filter(s=>s);
-        if (options.length < 2) { showToast('Masukkan minimal 2 opsi'); return; }
-    }
-    const id = 'q' + Date.now();
-    AppState.questions.push({
-        id, text, type, options, correctAnswer: answer, points,
-        isActive: false, answered: false, answerer: null, isCorrect: null
-    });
-    saveState();
-    renderSoalList();
-    clearSoalForm();
-    showToast('Soal ditambahkan');
-}
+        let paketAktif = 'A';
+        let soalIndex = 0;
+        let pertanyaan = '';
+        let kunciJawaban = '';
+        let timerValue = 30;
+        let timerRunning = false;
+        let soalTerjawab = false;
 
-function clearSoalForm() {
-    qText.value = '';
-    qType.value = 'pilihan_ganda';
-    qPoints.value = '10';
-    qOptions.value = '';
-    qAnswer.value = '';
-    soalForm.classList.add('hidden');
-}
-
-function deleteQuestion(index) {
-    if (!confirm('Hapus soal ini?')) return;
-    if (AppState.currentQuestionIndex === index) {
-        endCurrentQuestion();
-    } else if (AppState.currentQuestionIndex > index) {
-        AppState.currentQuestionIndex--;
-    }
-    AppState.questions.splice(index, 1);
-    saveState();
-    renderSoalList();
-    updateUI();
-    showToast('Soal dihapus');
-}
-
-function showQuestion(index, targetName) {
-    if (index < 0 || index >= AppState.questions.length) return;
-    if (AppState.currentQuestionIndex >= 0) endCurrentQuestion();
-
-    AppState.currentQuestionIndex = index;
-    AppState.currentQuestionTarget = targetName && targetName.trim() !== '' ? targetName.trim() : null;
-    const q = AppState.questions[index];
-    q.isActive = true;
-    q.answered = false;
-    q.answerer = null;
-    q.isCorrect = null;
-
-    // ⚠️ PERUBAHAN: TIDAK mengunci buzzer secara otomatis
-    // Biarkan buzzer tetap terbuka agar peserta bisa berebut
-    // Host dapat mengunci secara manual dengan tombol 🔒 Kunci
-
-    if (AppState.currentQuestionTarget) {
-        const target = AppState.currentQuestionTarget;
-        let found = false;
-        for (let id in AppState.connections) {
-            if (AppState.connections[id].name === target) {
-                try {
-                    AppState.connections[id].conn.send({
-                        type: 'showQuestion',
-                        question: q,
-                        target: target
-                    });
-                    found = true;
-                    showToast(`Soal ditampilkan ke ${target}`);
-                } catch(e) { showError('Gagal kirim ke peserta'); }
-                break;
-            }
-        }
-        if (!found) showToast(`Peserta "${target}" tidak ditemukan`);
-    } else {
-        broadcast({type:'showQuestion', question: q, target: null});
-        showToast(`Soal ditampilkan ke semua peserta`);
-    }
-
-    updateUI();
-    updateProjector();
-    saveState();
-}
-
-function endCurrentQuestion() {
-    const idx = AppState.currentQuestionIndex;
-    if (idx >= 0 && idx < AppState.questions.length) {
-        AppState.questions[idx].isActive = false;
-        AppState.questions[idx].answered = false;
-        AppState.questions[idx].answerer = null;
-        AppState.questions[idx].isCorrect = null;
-    }
-    AppState.currentQuestionIndex = -1;
-    AppState.currentQuestionTarget = null;
-    // Jangan otomatis mengunci/membuka – biarkan status lock tetap seperti sebelumnya
-    // broadcast({type:'lockStatus', locked:false}); // tidak perlu
-    broadcast({type:'questionEnd'});
-    updateUI();
-    updateProjector();
-    saveState();
-    showToast('Soal selesai');
-}
-
-function handleUnlockBuzzer() {
-    if (AppState.currentQuestionIndex < 0) { showToast('Tidak ada soal aktif'); return; }
-    AppState.questionLocked = false;
-    AppState.isLocked = false;
-    broadcast({type:'lockStatus', locked:false});
-    broadcast({type:'unlockBuzzer'});
-    updateUI();
-    showToast('🔓 Buzzer dibuka untuk soal ini');
-}
-
-function handleLockBuzzer() {
-    if (AppState.currentQuestionIndex < 0) { showToast('Tidak ada soal aktif'); return; }
-    AppState.questionLocked = true;
-    AppState.isLocked = true;
-    broadcast({type:'lockStatus', locked:true});
-    broadcast({type:'lockBuzzer'});
-    updateUI();
-    showToast('🔒 Buzzer dikunci untuk soal ini');
-}
-
-function gradeAnswerFromQueue(connId, isCorrect) {
-    const idx = AppState.currentQuestionIndex;
-    if (idx < 0 || idx >= AppState.questions.length) {
-        showToast('Tidak ada soal aktif');
-        return;
-    }
-    const q = AppState.questions[idx];
-    if (q.answered) {
-        showToast('Soal sudah dinilai');
-        return;
-    }
-    const connObj = AppState.connections[connId];
-    if (!connObj) { showToast('Peserta tidak ditemukan'); return; }
-    const name = connObj.name;
-    if (!name) return;
-
-    q.answered = true;
-    q.answerer = name;
-    q.isCorrect = isCorrect;
-    if (isCorrect) {
-        AppState.scores[name] = (AppState.scores[name] || 0) + q.points;
-        showToast(`✅ ${name} menjawab benar! +${q.points} poin`);
-        spawnConfetti(80);
-        playBell(660,0.5,0.5);
-    } else {
-        showToast(`❌ ${name} menjawab salah`);
-    }
-    AppState.buzzQueue = AppState.buzzQueue.filter(item => item.connId !== connId);
-    if (connObj) connObj.buzzed = false;
-    broadcast({type:'scoreUpdate', scores:AppState.scores});
-    broadcast({type:'queueUpdate', queue:AppState.buzzQueue.map((item,idx)=>({name:item.name,position:idx+1}))});
-    broadcast({type:'questionResult', correct:isCorrect, answerer:name, points:q.points, questionId: q.id});
-    updateUI();
-    updateProjector();
-    saveState();
-}
-
-function renderSoalList() {
-    const list = AppState.questions;
-    if (list.length === 0) {
-        soalList.innerHTML = '<div style="color:#94a3b8;font-size:0.8rem;text-align:center;">Belum ada soal</div>';
-        return;
-    }
-    let html = '';
-    list.forEach((q, idx) => {
-        const active = (AppState.currentQuestionIndex === idx);
-        const cls = active ? 'soal-item active-soal' : 'soal-item';
-        const status = active ? '🔴 Aktif' : (q.answered ? '✅ Selesai' : '⏳');
-        html += `
-            <div class="${cls}">
-                <span class="soal-text">${sanitize(q.text)}</span>
-                <span class="badge">${q.points} poin</span>
-                <span style="font-size:0.6rem;">${status}</span>
-                <span class="soal-actions">
-                    ${!active ? `<button class="primary" data-action="showSoalGlobal" data-idx="${idx}" style="font-size:0.6rem;">🌍 Global</button>` : ''}
-                    ${!active ? `<button class="primary" data-action="showSoalTarget" data-idx="${idx}" style="font-size:0.6rem;">🎯 Target</button>` : ''}
-                    <button class="outline-danger" data-action="hapusSoal" data-idx="${idx}" style="font-size:0.6rem;">✕</button>
-                </span>
-            </div>
-        `;
-    });
-    soalList.innerHTML = html;
-    soalList.querySelectorAll('[data-action="showSoalGlobal"]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const idx = parseInt(e.currentTarget.dataset.idx);
-            showQuestion(idx, null);
-        });
-    });
-    soalList.querySelectorAll('[data-action="showSoalTarget"]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const idx = parseInt(e.currentTarget.dataset.idx);
-            const target = prompt('Masukkan nama peserta target:', '');
-            if (target !== null) {
-                showQuestion(idx, target.trim());
-            }
-        });
-    });
-    soalList.querySelectorAll('[data-action="hapusSoal"]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const idx = parseInt(e.currentTarget.dataset.idx);
-            deleteQuestion(idx);
-        });
-    });
-}
-
-function updateSoalControls() {
-    const active = (AppState.currentQuestionIndex >= 0);
-    endQuestionBtn.disabled = !active;
-    lockBuzzerBtn.disabled = !active;
-    unlockBuzzerBtn.disabled = !active;
-    if (active) {
-        const q = AppState.questions[AppState.currentQuestionIndex];
-        if (q && q.answered) {
-            endQuestionBtn.textContent = '✅ Selesai (dinilai)';
-        } else {
-            endQuestionBtn.textContent = '❌ Selesai Soal';
-        }
-    } else {
-        endQuestionBtn.textContent = 'Selesai Soal';
-    }
-}
-
-function updateActiveQuestionInfo() {
-    const idx = AppState.currentQuestionIndex;
-    if (idx >= 0 && idx < AppState.questions.length) {
-        const q = AppState.questions[idx];
-        const target = AppState.currentQuestionTarget ? ` (untuk: ${AppState.currentQuestionTarget})` : ' (global)';
-        const status = q.answered ? ` ${q.answerer} ${q.isCorrect ? '✅ benar' : '❌ salah'}` : ' menunggu';
-        activeQuestionInfo.textContent = `📌 Soal aktif: ${sanitize(q.text)}${target}${status}`;
-    } else {
-        activeQuestionInfo.textContent = '';
-    }
-}
-
-// ---- IMPORT SOAL ----
-function importSoalFromFile(file) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    if (ext === 'json') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (Array.isArray(data)) {
-                    importQuestions(data);
-                } else if (data.questions && Array.isArray(data.questions)) {
-                    importQuestions(data.questions);
-                } else {
-                    showError('Format JSON tidak valid. Harus array soal atau objek dengan properti "questions".');
-                }
-            } catch(err) {
-                showError('Gagal parsing JSON: ' + err.message);
-            }
+        let tampilkan = {
+            soal: false,
+            kunci: false,
+            timer: false,
+            skor: false,
+            paket: false,
+            histori: false
         };
-        reader.readAsText(file);
-    } else if (ext === 'docx') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const arrayBuffer = e.target.result;
-            mammoth.extractRawText({ arrayBuffer })
-                .then(result => {
-                    const text = result.value;
-                    const parsed = parseSoalFromText(text);
-                    if (parsed.length > 0) {
-                        importQuestions(parsed);
-                    } else {
-                        showError('Tidak ditemukan soal dalam dokumen. Pastikan format sesuai.');
-                    }
-                })
-                .catch(err => {
-                    showError('Gagal membaca .docx: ' + err.message);
-                });
-        };
-        reader.readAsArrayBuffer(file);
-    } else if (ext === 'txt') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const text = e.target.result;
-            const parsed = parseSoalFromText(text);
-            if (parsed.length > 0) {
-                importQuestions(parsed);
-            } else {
-                showError('Tidak ditemukan soal dalam file teks. Pastikan format sesuai.');
-            }
-        };
-        reader.readAsText(file);
-    } else {
-        showError('Format file tidak didukung. Gunakan .json, .txt, atau .docx');
-    }
-}
 
-function parseSoalFromText(text) {
-    const lines = text.split(/\n/).map(l => l.trim()).filter(l => l);
-    const blocks = [];
-    let currentBlock = [];
-    for (let line of lines) {
-        if (line.match(/^Soal\s*\d+[:.]/i) || line.match(/^\d+[:.]/)) {
-            if (currentBlock.length > 0) {
-                blocks.push(currentBlock);
-                currentBlock = [];
-            }
-        }
-        currentBlock.push(line);
-    }
-    if (currentBlock.length > 0) blocks.push(currentBlock);
+        let historiSkor = [];
+        let historiVisible = false;
 
-    const questions = [];
-    for (let block of blocks) {
-        if (block.length < 2) continue;
-        let textSoal = '';
-        let options = [];
-        let jawaban = '';
-        let isPilihanGanda = false;
+        const channel = new BroadcastChannel('cerdas-cermat');
 
-        let jawabanLineIdx = -1;
-        for (let i = 0; i < block.length; i++) {
-            if (block[i].match(/^jawaban\s*[:.]/i)) {
-                jawabanLineIdx = i;
-                break;
-            }
+        const $ = id => document.getElementById(id);
+        const pertanyaanInput = $('pertanyaanInput');
+        const kunciInput = $('kunciInput');
+        const timerInput = $('timerInput');
+        const soalIndexDisplay = $('soalIndexDisplay');
+        const totalSoalDisplay = $('totalSoalDisplay');
+        const paketLabel = $('paketLabel');
+        const statusKontrol = $('statusKontrol');
+        const timContainer = $('timContainer');
+        const paketAktifSelect = $('paketAktif');
+        const fileInput = $('fileInput');
+        const restoreInput = $('restoreInput');
+        const imageInput = $('imageInput');
+        const indicators = {};
+        PAKET_IDS.forEach(p => indicators[p] = $(`indicator${p}`));
+        const chkSoal = $('chkSoal');
+        const chkKunci = $('chkKunci');
+        const chkTimer = $('chkTimer');
+        const chkSkor = $('chkSkor');
+        const chkPaket = $('chkPaket');
+        const chkHistori = $('chkHistori');
+        const historiContainer = $('historiContainer');
+        const historiList = $('historiList');
+
+        let importPending = null;
+
+        // ======================== INSERT GAMBAR ========================
+        function insertImageToTextarea(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                const imgTag = `<img src="${base64}" style="max-width:100%; max-height:400px; display:block; margin:10px 0;" />`;
+                const textarea = pertanyaanInput;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const before = textarea.value.substring(0, start);
+                const after = textarea.value.substring(end);
+                textarea.value = before + imgTag + after;
+                // letakkan kursor setelah gambar
+                const newPos = start + imgTag.length;
+                textarea.selectionStart = textarea.selectionEnd = newPos;
+                textarea.focus();
+                statusKontrol.textContent = '🖼 Gambar disisipkan ke soal. Jangan lupa klik Update Soal.';
+            };
+            reader.readAsDataURL(file);
         }
 
-        let jawabanRaw = '';
-        if (jawabanLineIdx !== -1) {
-            jawabanRaw = block[jawabanLineIdx].replace(/^jawaban\s*[:.]\s*/i, '').trim();
+        // ======================== HISTORI ========================
+        function tambahHistori(timNama, perubahan, skorBaru, keterangan = '') {
+            const now = new Date();
+            const waktu = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            historiSkor.push({
+                waktu,
+                timNama,
+                perubahan,
+                skorBaru,
+                keterangan
+            });
+            renderHistori();
         }
 
-        let endIdx = jawabanLineIdx !== -1 ? jawabanLineIdx : block.length;
-        let optionStartIdx = -1;
-        for (let i = 0; i < endIdx; i++) {
-            if (block[i].match(/^[A-Za-z][).]\s*/)) {
-                optionStartIdx = i;
-                break;
+        function renderHistori() {
+            historiList.innerHTML = '';
+            if (historiSkor.length === 0) {
+                historiList.innerHTML = '<div style="color:#94a3b8; text-align:center; padding:10px;">Belum ada histori.</div>';
+                return;
             }
-        }
-
-        if (optionStartIdx !== -1) {
-            isPilihanGanda = true;
-            for (let i = optionStartIdx; i < endIdx; i++) {
-                const optMatch = block[i].match(/^([A-Za-z])[).]\s*(.*)/);
-                if (optMatch) {
-                    options.push(optMatch[2].trim());
-                }
-            }
-            textSoal = block.slice(0, optionStartIdx).join(' ');
-            if (jawabanRaw.match(/^[A-Za-z]$/)) {
-                const idx = jawabanRaw.toUpperCase().charCodeAt(0) - 65;
-                if (idx >= 0 && idx < options.length) {
-                    jawaban = options[idx];
-                } else {
-                    jawaban = jawabanRaw;
-                }
-            } else {
-                jawaban = jawabanRaw;
-            }
-        } else {
-            isPilihanGanda = false;
-            textSoal = block.slice(0, endIdx).join(' ');
-            jawaban = jawabanRaw;
-        }
-
-        textSoal = textSoal.replace(/^soal\s*\d+[:.]\s*/i, '').trim();
-
-        if (textSoal && jawaban) {
-            questions.push({
-                id: 'q' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
-                text: textSoal,
-                type: isPilihanGanda ? 'pilihan_ganda' : 'isian',
-                options: options,
-                correctAnswer: jawaban,
-                points: 10,
-                isActive: false,
-                answered: false,
-                answerer: null,
-                isCorrect: null
+            const reversed = [...historiSkor].reverse();
+            reversed.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'histori-item';
+                let kelasPerubahan = '';
+                if (item.perubahan.startsWith('+')) kelasPerubahan = 'plus';
+                else if (item.perubahan.startsWith('-')) kelasPerubahan = 'minus';
+                else if (item.perubahan === 'Buzzer') kelasPerubahan = 'buzzer';
+                else if (item.perubahan === 'Reset') kelasPerubahan = 'reset';
+                div.innerHTML = `
+                    <span><span class="waktu">${item.waktu}</span> <strong>${item.timNama}</strong></span>
+                    <span><span class="perubahan ${kelasPerubahan}">${item.perubahan}</span> → <strong>${item.skorBaru}</strong> ${item.keterangan}</span>
+                `;
+                historiList.appendChild(div);
             });
         }
-    }
-    return questions;
-}
 
-function importQuestions(questionsArray) {
-    if (!Array.isArray(questionsArray) || questionsArray.length === 0) {
-        showError('Tidak ada soal yang valid untuk diimpor.');
-        return;
-    }
-    const msg = `Ditemukan ${questionsArray.length} soal. Lanjutkan impor?`;
-    if (!confirm(msg)) return;
-
-    let added = 0;
-    for (let q of questionsArray) {
-        if (!q.text || !q.correctAnswer) continue;
-        if (!q.type) {
-            q.type = (q.options && q.options.length > 0) ? 'pilihan_ganda' : 'isian';
-        }
-        q.id = 'q' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
-        q.isActive = false;
-        q.answered = false;
-        q.answerer = null;
-        q.isCorrect = null;
-        if (q.type === 'pilihan_ganda' && (!q.options || q.options.length < 2)) {
-            q.type = 'isian';
-            q.options = [];
-        }
-        AppState.questions.push(q);
-        added++;
-    }
-    saveState();
-    renderSoalList();
-    updateUI();
-    showToast(`✅ ${added} soal berhasil diimpor!`);
-}
-
-// ---- EVENT LISTENERS ----
-buatBtn.addEventListener('click', ()=>{
-    if (AppState.peer) {
-        clearInterval(AppState.pingInterval);
-        AppState.peer.destroy();
-        AppState.peer = null;
-    }
-    AppState.buzzQueue = [];
-    AppState.connections = {};
-    AppState.isLocked = false;
-    AppState.buzzHistory = [];
-    AppState.scores = {};
-    AppState.peerId = null;
-    AppState.round = 1;
-    AppState.questions = [];
-    AppState.currentQuestionIndex = -1;
-    AppState.currentQuestionTarget = null;
-    AppState.questionLocked = false;
-    AppState.sessionStart = Date.now();
-    saveState();
-    updateUI();
-    initHost();
-});
-
-lockBtn.addEventListener('click', ()=>{
-    if (!AppState.peer) { showToast('Buat ruangan dulu!'); return; }
-    AppState.isLocked = !AppState.isLocked;
-    AppState.questionLocked = AppState.isLocked;
-    updateUI();
-    saveState();
-    broadcast({type:'lockStatus', locked:AppState.isLocked});
-    showToast(AppState.isLocked ? '🔒 Buzzer dikunci' : '🔓 Buzzer dibuka');
-});
-
-resetBtn.addEventListener('click', resetBuzzerQueue);
-resetSkorBtn.addEventListener('click', resetAllScores);
-resetBabakBtn.addEventListener('click', resetBabak);
-
-testBtn.addEventListener('click', ()=>{
-    if (!AppState.peer) { showToast('Buat ruangan dulu!'); return; }
-    broadcast({type:'testSound'});
-    playBell(600,0.3,0.4);
-    showToast('🔊 Tes suara dikirim');
-});
-
-projectorBtn.addEventListener('click', ()=>{
-    if (!AppState.peer) { showToast('Buat ruangan dulu!'); return; }
-    if (projectorOverlay.classList.contains('active')) closeProjector();
-    else openProjector();
-});
-closeProj.addEventListener('click', closeProjector);
-
-demoBtn.addEventListener('click', demoBuzz);
-clearAllBtn.addEventListener('click', clearAllParticipants);
-
-addWhitelistBtn.addEventListener('click', ()=>addWhitelist(whitelistInput.value));
-whitelistInput.addEventListener('keypress', (e)=> { if (e.key==='Enter') addWhitelist(whitelistInput.value); });
-
-setPassBtn.addEventListener('click', ()=>{
-    const raw = roomPassword.value.trim();
-    AppState.roomPassword = raw ? btoa(raw) : '';
-    saveState();
-    roomPassword.value = AppState.roomPassword ? '(tersimpan)' : '';
-    showToast('Password disimpan');
-});
-
-document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', ()=>{
-        const val = parseInt(btn.dataset.preset);
-        if (!isNaN(val)) timerDuration.value = val;
-    });
-});
-
-startTimerBtn.addEventListener('click', ()=>{
-    const dur = parseInt(timerDuration.value) || 10;
-    const target = timerTarget.value;
-    if (!target) { showToast('Pilih target.'); return; }
-    startTimer(dur, target);
-    showToast(`⏱ Timer ${dur} detik dimulai${target!=='global'?' untuk '+target:''}`);
-});
-stopTimerBtn.addEventListener('click', stopTimer);
-
-document.getElementById('copyRoomId').addEventListener('click', function() {
-    const id = document.getElementById('roomIdDisplay').textContent;
-    if (id && id !== '-') {
-        navigator.clipboard.writeText(id).then(() => {
-            showToast('📋 ID ruangan disalin!');
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = id;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast('📋 ID ruangan disalin!');
-        });
-    }
-});
-
-toggleScoresBtn.addEventListener('click', ()=>toggleVisibility('showScores'));
-toggleQueuesBtn.addEventListener('click', ()=>toggleVisibility('showQueues'));
-toggleTimersBtn.addEventListener('click', ()=>toggleVisibility('showTimers'));
-toggleProjectorScoresBtn.addEventListener('click', toggleProjectorScores);
-exportBtn.addEventListener('click', exportState);
-importBtn.addEventListener('click', importState);
-exportDataBtn.addEventListener('click', showExportOptions);
-
-toggleSoalForm.addEventListener('click', ()=>{
-    soalForm.classList.toggle('hidden');
-    if (!soalForm.classList.contains('hidden')) qText.focus();
-});
-cancelSoalBtn.addEventListener('click', clearSoalForm);
-addSoalBtn.addEventListener('click', addQuestion);
-
-importSoalBtn.addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,.txt,.docx';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        importSoalFromFile(file);
-        input.remove();
-    };
-    input.click();
-});
-
-endQuestionBtn.addEventListener('click', ()=>{
-    if (AppState.currentQuestionIndex >= 0) endCurrentQuestion();
-    else showToast('Tidak ada soal aktif');
-});
-
-lockBuzzerBtn.addEventListener('click', handleLockBuzzer);
-unlockBuzzerBtn.addEventListener('click', handleUnlockBuzzer);
-
-// ---- Event Delegation ----
-pesertaList.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-action]');
-    if (btn) {
-        const id = btn.dataset.id;
-        const name = AppState.connections[id]?.name;
-        if (!name) { showToast('Peserta tidak ditemukan'); return; }
-
-        if (btn.dataset.action === 'score') {
-            const deltaInput = document.getElementById('delta_'+id.replace(/[^a-zA-Z0-9]/g,'_'));
-            let deltaVal = parseInt(deltaInput.value);
-            if (isNaN(deltaVal) || deltaVal < 1) deltaVal = 1;
-            const sign = parseInt(btn.dataset.d);
-            const change = sign * deltaVal;
-            adjustScore(name, change);
-            return;
-        }
-        if (btn.dataset.action === 'kick') {
-            if (confirm(`Kick ${name}?`)) {
-                try { AppState.connections[id].conn.send({type:'kicked'}); AppState.connections[id].conn.close(); } catch(e) {}
-                delete AppState.connections[id];
-                AppState.buzzQueue = AppState.buzzQueue.filter(item => item.connId !== id);
-                updateUI(); saveState();
-                broadcast({type:'queueUpdate', queue:AppState.buzzQueue.map((item,idx)=>({name:item.name,position:idx+1}))});
-                showToast(`Peserta ${name} dikeluarkan`);
+        function hapusHistori() {
+            if (confirm('Hapus semua histori skor?')) {
+                historiSkor = [];
+                renderHistori();
+                statusKontrol.textContent = '🗑 Histori skor dihapus.';
             }
-            return;
         }
-    }
 
-    const badge = e.target.closest('.score-badge[data-action="editScore"]');
-    if (badge) {
-        const name = badge.dataset.name;
-        if (!name) return;
-        const current = AppState.scores[name] || 0;
-        const newVal = prompt(`Ubah skor untuk ${name}:`, current);
-        if (newVal !== null) {
-            const val = parseInt(newVal);
-            if (!isNaN(val) && val >= 0) {
-                updateScore(name, val);
-                showToast(`${name} → ${val}`);
+        function toggleHistori() {
+            historiVisible = !historiVisible;
+            historiContainer.style.display = historiVisible ? 'block' : 'none';
+            if (historiVisible) renderHistori();
+        }
+
+        // ======================== RENDER TIM ========================
+        function renderTim() {
+            timContainer.innerHTML = '';
+            tim.forEach((t, idx) => {
+                const div = document.createElement('div');
+                div.className = 'tim-item';
+                div.innerHTML = `
+                    <input type="text" value="${t.nama}" data-idx="${idx}" class="tim-nama-input" style="flex:1; min-width:70px;">
+                    <input type="number" value="${t.skor}" data-idx="${idx}" class="tim-skor-input" min="0" style="width:70px;">
+                    <button class="btn btn-success" data-idx="${idx}" data-act="plus">+</button>
+                    <button class="btn btn-danger" data-idx="${idx}" data-act="minus">−</button>
+                    <button class="btn btn-warning" data-idx="${idx}" data-act="buzzer">🔔 Buzzer</button>
+                `;
+                timContainer.appendChild(div);
+            });
+
+            document.querySelectorAll('.tim-nama-input').forEach(inp => {
+                inp.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    tim[idx].nama = e.target.value;
+                    kirimUpdate();
+                });
+            });
+
+            document.querySelectorAll('.tim-skor-input').forEach(inp => {
+                inp.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    let val = parseInt(e.target.value) || 0;
+                    if (val < 0) val = 0;
+                    const perubahan = val - tim[idx].skor;
+                    const perubahanStr = perubahan >= 0 ? `+${perubahan}` : `${perubahan}`;
+                    tim[idx].skor = val;
+                    if (perubahan !== 0) {
+                        tambahHistori(tim[idx].nama, perubahanStr, val, 'manual input');
+                    }
+                    kirimUpdate();
+                    renderTim();
+                });
+            });
+
+            document.querySelectorAll('[data-act]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    const act = e.target.dataset.act;
+                    if (act === 'plus') {
+                        tim[idx].skor += 1;
+                        tambahHistori(tim[idx].nama, '+1', tim[idx].skor, '');
+                        kirimUpdate();
+                        renderTim();
+                    } else if (act === 'minus') {
+                        if (tim[idx].skor > 0) {
+                            tim[idx].skor -= 1;
+                            tambahHistori(tim[idx].nama, '-1', tim[idx].skor, '');
+                            kirimUpdate();
+                            renderTim();
+                        }
+                    } else if (act === 'buzzer') {
+                        if (soalTerjawab) {
+                            statusKontrol.textContent = '⚠️ Soal sudah terjawab/buzzer sudah ditekan.';
+                            return;
+                        }
+                        if (!timerRunning && timerValue > 0) {
+                            statusKontrol.textContent = '⏳ Timer belum berjalan!';
+                            return;
+                        }
+                        if (pertanyaan.trim() === '') {
+                            statusKontrol.textContent = '⚠️ Tidak ada soal yang ditampilkan.';
+                            return;
+                        }
+                        soalTerjawab = true;
+                        timerRunning = false;
+                        tambahHistori(tim[idx].nama, 'Buzzer', tim[idx].skor, '🔔');
+                        kirimUpdate();
+                        renderTim();
+                        statusKontrol.textContent = `🔔 Buzzer dari ${tim[idx].nama}! Juri beri nilai manual dengan tombol +.`;
+                    }
+                });
+            });
+        }
+
+        // ======================== KOMUNIKASI ========================
+        function kirimUpdate() {
+            tampilkan.soal = chkSoal.checked;
+            tampilkan.kunci = chkKunci.checked;
+            tampilkan.timer = chkTimer.checked;
+            tampilkan.skor = chkSkor.checked;
+            tampilkan.paket = chkPaket.checked;
+            tampilkan.histori = chkHistori.checked;
+
+            const data = {
+                type: 'update',
+                paketAktif,
+                soalIndex,
+                pertanyaan,
+                kunciJawaban,
+                timerValue,
+                timerRunning,
+                soalTerjawab,
+                tim: tim.map(t => ({ ...t })),
+                mode: 'essay',
+                totalSoal: paketSoal[paketAktif] ? paketSoal[paketAktif].length : 0,
+                tampilkan: tampilkan,
+                historiData: historiSkor
+            };
+            channel.postMessage(data);
+            const total = paketSoal[paketAktif] ? paketSoal[paketAktif].length : 0;
+            soalIndexDisplay.textContent = total > 0 ? soalIndex + 1 : 0;
+            totalSoalDisplay.textContent = total;
+            paketLabel.textContent = paketAktif;
+            statusKontrol.textContent = '📡 Data dikirim ke tampilan.';
+            updateIndikator();
+            if (timerRunning) {
+                statusKontrol.className = 'status-box running';
             } else {
-                showToast('Masukkan angka valid (≥0)');
+                statusKontrol.className = 'status-box';
             }
         }
-    }
-});
 
-buzzQueueList.addEventListener('click', (e) => {
-    const li = e.target.closest('li[data-index]');
-    if (!li) return;
-    const idx = parseInt(li.dataset.index);
-    if (isNaN(idx)) return;
-    const item = AppState.buzzQueue[idx];
-    if (!item) return;
-    const name = item.name;
-    const connId = item.connId;
-
-    if (AppState.currentQuestionIndex < 0) {
-        if (confirm(`Hapus ${name} dari antrian?`)) {
-            AppState.buzzQueue.splice(idx, 1);
-            if (connId && AppState.connections[connId]) AppState.connections[connId].buzzed = false;
-            updateUI();
-            saveState();
-            broadcast({type:'queueUpdate', queue:AppState.buzzQueue.map((item,i)=>({name:item.name,position:i+1}))});
-            showToast(`✅ ${name} dihapus dari antrian`);
+        function updateIndikator() {
+            for (let p of PAKET_IDS) {
+                const count = paketSoal[p] ? paketSoal[p].length : 0;
+                indicators[p].textContent = `${p}: ${count}`;
+            }
         }
-        return;
-    }
 
-    const q = AppState.questions[AppState.currentQuestionIndex];
-    if (q.answered) {
-        showToast('Soal sudah dinilai');
-        return;
-    }
-    if (confirm(`Nilai jawaban dari ${name}? (Klik OK untuk benar, Batal untuk salah)`)) {
-        gradeAnswerFromQueue(connId, true);
-    } else {
-        gradeAnswerFromQueue(connId, false);
-    }
-});
+        channel.onmessage = (e) => {
+            if (e.data.type === 'request') {
+                kirimUpdate();
+                statusKontrol.textContent = '📡 Tampilan meminta update, dikirim ulang.';
+            }
+        };
 
-// ---- INIT ----
-loadState();
-try {
-    const bh = localStorage.getItem('buzzHistory');
-    if (bh) AppState.buzzHistory = JSON.parse(bh);
-} catch(e) {}
-renderWhitelist();
-renderSoalList();
-updateUI();
-if (AppState.peerId && isValidRoomCode(AppState.peerId)) {
-    initHost();
-} else {
-    buatBtn.disabled = false;
-    buatBtn.textContent = '🚀 Set Ruang';
-}
-console.log('✅ Host dengan semua fitur siap (tanpa Multi-Host, tanpa Chat)');
-</script>
+        // ======================== FUNGSI SOAL ========================
+        function loadSoalKeForm() {
+            pertanyaanInput.value = pertanyaan;
+            kunciInput.value = kunciJawaban;
+            timerInput.value = timerValue;
+            const total = paketSoal[paketAktif] ? paketSoal[paketAktif].length : 0;
+            soalIndexDisplay.textContent = total > 0 ? soalIndex + 1 : 0;
+            totalSoalDisplay.textContent = total;
+            paketLabel.textContent = paketAktif;
+            paketAktifSelect.value = paketAktif;
+            updateIndikator();
+        }
+
+        function loadSoalFromPaket(paketId, idx) {
+            const paket = paketSoal[paketId];
+            if (!paket || paket.length === 0) {
+                pertanyaan = '';
+                kunciJawaban = '';
+                return;
+            }
+            if (idx >= paket.length) idx = paket.length - 1;
+            if (idx < 0) idx = 0;
+            soalIndex = idx;
+            pertanyaan = paket[soalIndex].pertanyaan || '';
+            kunciJawaban = paket[soalIndex].kunci || '';
+        }
+
+        function updateSoalFromForm() {
+            const paket = paketSoal[paketAktif];
+            if (!paket) return;
+            const q = pertanyaanInput.value.trim();
+            if (q === '') {
+                statusKontrol.textContent = '⚠️ Soal tidak boleh kosong!';
+                return;
+            }
+            if (paket.length === 0) {
+                paket.push({ pertanyaan: '', kunci: '' });
+                soalIndex = 0;
+            }
+            paket[soalIndex].pertanyaan = q;
+            paket[soalIndex].kunci = kunciInput.value.trim() || '(tidak ada kunci)';
+            pertanyaan = paket[soalIndex].pertanyaan;
+            kunciJawaban = paket[soalIndex].kunci;
+            timerValue = parseInt(timerInput.value) || 30;
+            soalTerjawab = false;
+            timerRunning = false;
+            kirimUpdate();
+            loadSoalKeForm();
+            statusKontrol.textContent = `✅ Soal paket ${paketAktif} diperbarui dan dikirim ke tampilan.`;
+        }
+
+        function mulaiTimer() {
+            if (soalTerjawab) {
+                statusKontrol.textContent = '⚠️ Soal sudah terjawab. Reset atau next soal.';
+                return;
+            }
+            if (pertanyaan.trim() === '') {
+                statusKontrol.textContent = '⚠️ Tidak ada soal untuk ditampilkan. Update soal terlebih dahulu.';
+                return;
+            }
+            timerRunning = true;
+            timerValue = parseInt(timerInput.value) || 30;
+            kirimUpdate();
+            statusKontrol.textContent = '⏳ Timer berjalan...';
+        }
+
+        function prevSoal() {
+            const paket = paketSoal[paketAktif];
+            if (!paket || paket.length === 0) {
+                statusKontrol.textContent = '⚠️ Paket kosong.';
+                return;
+            }
+            if (soalIndex > 0) {
+                soalIndex--;
+                pertanyaan = paket[soalIndex].pertanyaan;
+                kunciJawaban = paket[soalIndex].kunci || '(tidak ada kunci)';
+                timerValue = parseInt(timerInput.value) || 30;
+                soalTerjawab = false;
+                timerRunning = false;
+                loadSoalKeForm();
+                kirimUpdate();
+                statusKontrol.textContent = `⏪ Kembali ke soal ${soalIndex+1} (paket ${paketAktif})`;
+            } else {
+                statusKontrol.textContent = '⚠️ Ini sudah soal pertama.';
+            }
+        }
+
+        function nextSoal() {
+            const paket = paketSoal[paketAktif];
+            if (!paket || paket.length === 0) {
+                statusKontrol.textContent = '⚠️ Paket kosong. Impor atau tambah soal.';
+                return;
+            }
+            if (soalIndex < paket.length - 1) {
+                soalIndex++;
+            } else {
+                paket.push({ pertanyaan: `Soal baru ${paket.length+1}`, kunci: '' });
+                soalIndex = paket.length - 1;
+            }
+            pertanyaan = paket[soalIndex].pertanyaan;
+            kunciJawaban = paket[soalIndex].kunci || '(tidak ada kunci)';
+            timerValue = parseInt(timerInput.value) || 30;
+            soalTerjawab = false;
+            timerRunning = false;
+            loadSoalKeForm();
+            kirimUpdate();
+            statusKontrol.textContent = `⏩ Pindah ke soal ${soalIndex+1} (paket ${paketAktif}) dan ditampilkan.`;
+        }
+
+        function resetKeAwal() {
+            const paket = paketSoal[paketAktif];
+            if (!paket || paket.length === 0) {
+                statusKontrol.textContent = '⚠️ Paket kosong. Tidak ada soal untuk di-reset.';
+                return;
+            }
+            soalIndex = 0;
+            pertanyaan = paket[0].pertanyaan;
+            kunciJawaban = paket[0].kunci || '(tidak ada kunci)';
+            timerValue = parseInt(timerInput.value) || 30;
+            soalTerjawab = false;
+            timerRunning = false;
+            loadSoalKeForm();
+            kirimUpdate();
+            statusKontrol.textContent = `⟲ Kembali ke soal pertama (paket ${paketAktif})`;
+        }
+
+        function resetSoal() {
+            const paket = paketSoal[paketAktif];
+            if (paket && paket.length > 0) {
+                paket.splice(soalIndex, 1);
+                if (paket.length === 0) {
+                    soalIndex = 0;
+                    pertanyaan = '';
+                    kunciJawaban = '';
+                } else {
+                    if (soalIndex >= paket.length) soalIndex = paket.length - 1;
+                    pertanyaan = paket[soalIndex].pertanyaan;
+                    kunciJawaban = paket[soalIndex].kunci;
+                }
+            } else {
+                pertanyaan = '';
+                kunciJawaban = '';
+                soalIndex = 0;
+            }
+            timerValue = parseInt(timerInput.value) || 30;
+            soalTerjawab = false;
+            timerRunning = false;
+            loadSoalKeForm();
+            kirimUpdate();
+            statusKontrol.textContent = '⟲ Soal dihapus (atau paket kosong).';
+        }
+
+        function hapusSoal() {
+            const paket = paketSoal[paketAktif];
+            if (!paket || paket.length === 0) {
+                statusKontrol.textContent = '⚠️ Tidak ada soal untuk dihapus.';
+                return;
+            }
+            if (confirm(`Hapus soal ke-${soalIndex+1} dari paket ${paketAktif}?`)) {
+                resetSoal();
+            }
+        }
+
+        function hapusSemuaSoal() {
+            if (!confirm('Yakin ingin menghapus SEMUA soal dari semua paket (A-L)?')) return;
+            PAKET_IDS.forEach(p => paketSoal[p] = []);
+            pertanyaan = '';
+            kunciJawaban = '';
+            soalIndex = 0;
+            timerValue = parseInt(timerInput.value) || 30;
+            soalTerjawab = false;
+            timerRunning = false;
+            loadSoalKeForm();
+            kirimUpdate();
+            statusKontrol.textContent = '🗑 Semua soal dari semua paket telah dihapus.';
+        }
+
+        function resetSkor() {
+            if (!confirm('Reset skor semua tim ke 0?')) return;
+            tim.forEach(t => {
+                t.skor = 0;
+                tambahHistori(t.nama, 'Reset', 0, 'reset semua');
+            });
+            renderTim();
+            kirimUpdate();
+            statusKontrol.textContent = '↺ Skor semua tim direset.';
+        }
+
+        function tambahTim() {
+            const newName = `Tim ${String.fromCharCode(65 + tim.length)}`;
+            tim.push({ nama: newName, skor: 0 });
+            tambahHistori(newName, 'Tambah', 0, 'tim baru');
+            renderTim();
+            kirimUpdate();
+            statusKontrol.textContent = `➕ Tim ${newName} ditambahkan.`;
+        }
+
+        // ======================== BACKUP & RESTORE ========================
+        function backupPaket() {
+            const data = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                paketSoal: paketSoal
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_paket_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            statusKontrol.textContent = '📦 Backup paket berhasil diunduh.';
+        }
+
+        function restorePaket(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.paketSoal || typeof data.paketSoal !== 'object') {
+                        statusKontrol.textContent = '❌ File backup tidak valid.';
+                        return;
+                    }
+                    const keys = Object.keys(data.paketSoal);
+                    const valid = PAKET_IDS.every(p => keys.includes(p));
+                    if (!valid) {
+                        statusKontrol.textContent = '❌ File backup tidak memiliki semua paket (A-L).';
+                        return;
+                    }
+                    PAKET_IDS.forEach(p => {
+                        paketSoal[p] = Array.isArray(data.paketSoal[p]) ? data.paketSoal[p] : [];
+                    });
+                    pertanyaan = '';
+                    kunciJawaban = '';
+                    soalIndex = 0;
+                    timerValue = parseInt(timerInput.value) || 30;
+                    soalTerjawab = false;
+                    timerRunning = false;
+                    loadSoalKeForm();
+                    kirimUpdate();
+                    statusKontrol.textContent = '✅ Paket berhasil direstore dari backup.';
+                } catch (err) {
+                    statusKontrol.textContent = `❌ Gagal membaca file: ${err.message}`;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ======================== IMPOR .DOCX ========================
+        function parseSoalEsaiDariTeks(teks) {
+            const lines = teks.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const soal = [];
+            let current = null;
+            let isKunci = false;
+
+            for (const line of lines) {
+                const nomorMatch = line.match(/^(\d+)\.?\s*(.*)/);
+                if (nomorMatch) {
+                    if (current) soal.push(current);
+                    current = {
+                        pertanyaan: nomorMatch[2].trim(),
+                        kunci: ''
+                    };
+                    isKunci = false;
+                    continue;
+                }
+                const kunciMatch = line.match(/^(Kunci|Jawaban)\s*:\s*(.*)/i);
+                if (kunciMatch && current) {
+                    current.kunci = kunciMatch[2].trim();
+                    isKunci = true;
+                    continue;
+                }
+                if (current) {
+                    if (isKunci) {
+                        current.kunci += ' ' + line;
+                    } else {
+                        current.pertanyaan += ' ' + line;
+                    }
+                }
+            }
+            if (current) soal.push(current);
+            return soal;
+        }
+
+        function showImportPreview(paketId, soalArray) {
+            const modal = document.getElementById('importModal');
+            const preview = document.getElementById('previewContent');
+            let html = `<p>Ditemukan <strong>${soalArray.length}</strong> soal untuk paket <strong>${paketId}</strong>.</p>`;
+            if (soalArray.length === 0) {
+                html += `<p style="color:#ef4444;">Tidak ada soal terdeteksi. Periksa format file.</p>`;
+            } else {
+                html += `<ul>`;
+                soalArray.slice(0, 5).forEach((s, i) => {
+                    html += `<li><strong>${i+1}.</strong> ${s.pertanyaan.substring(0, 80)}${s.pertanyaan.length>80?'...':''} <br/><span style="color:#94a3b8;font-size:0.9rem;">Kunci: ${s.kunci || '-'}</span></li>`;
+                });
+                if (soalArray.length > 5) html += `<li>... dan ${soalArray.length-5} soal lainnya.</li>`;
+                html += `</ul>`;
+            }
+            preview.innerHTML = html;
+            modal.style.display = 'flex';
+            importPending = { paketId, soalArray };
+        }
+
+        document.getElementById('confirmImport').addEventListener('click', () => {
+            if (!importPending) return;
+            const { paketId, soalArray } = importPending;
+            if (soalArray.length === 0) {
+                statusKontrol.textContent = '⚠️ Tidak ada soal untuk diimpor.';
+                document.getElementById('importModal').style.display = 'none';
+                importPending = null;
+                return;
+            }
+            paketSoal[paketId] = soalArray;
+            if (paketAktif === paketId) {
+                loadSoalFromPaket(paketId, 0);
+                timerValue = parseInt(timerInput.value) || 30;
+                soalTerjawab = false;
+                timerRunning = false;
+                loadSoalKeForm();
+                kirimUpdate();
+            }
+            statusKontrol.textContent = `✅ Berhasil impor ${soalArray.length} soal ke paket ${paketId}! (ditampilkan jika aktif)`;
+            updateIndikator();
+            document.getElementById('importModal').style.display = 'none';
+            importPending = null;
+        });
+
+        document.getElementById('cancelImport').addEventListener('click', () => {
+            document.getElementById('importModal').style.display = 'none';
+            importPending = null;
+            statusKontrol.textContent = '❌ Impor dibatalkan.';
+        });
+
+        async function importToPaket(paketId) {
+            fileInput.click();
+            fileInput.dataset.target = paketId;
+        }
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const targetPaket = fileInput.dataset.target || 'A';
+            statusKontrol.textContent = `⏳ Membaca file .docx untuk paket ${targetPaket}...`;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer });
+                const rawText = result.value;
+
+                const soalBaru = parseSoalEsaiDariTeks(rawText);
+                if (soalBaru.length === 0) {
+                    statusKontrol.textContent = '⚠️ Tidak ada soal yang terdeteksi. Periksa format.';
+                    return;
+                }
+                showImportPreview(targetPaket, soalBaru);
+            } catch (error) {
+                console.error(error);
+                statusKontrol.textContent = `❌ Gagal: ${error.message}`;
+            }
+            e.target.value = '';
+        });
+
+        document.querySelectorAll('[data-paket]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const p = btn.dataset.paket;
+                importToPaket(p);
+            });
+        });
+
+        // ======================== PAKET AKTIF ========================
+        paketAktifSelect.addEventListener('change', (e) => {
+            const newPaket = e.target.value;
+            const paketLama = paketSoal[paketAktif];
+            if (paketLama && paketLama.length > 0 && soalIndex < paketLama.length) {
+                const currentQ = pertanyaanInput.value.trim();
+                if (currentQ !== '') {
+                    paketLama[soalIndex].pertanyaan = currentQ;
+                    paketLama[soalIndex].kunci = kunciInput.value.trim() || '(tidak ada kunci)';
+                }
+            }
+
+            paketAktif = newPaket;
+            const paketBaru = paketSoal[paketAktif];
+            if (paketBaru && paketBaru.length > 0) {
+                loadSoalFromPaket(paketAktif, 0);
+            } else {
+                pertanyaan = '';
+                kunciJawaban = '';
+                soalIndex = 0;
+            }
+            timerValue = parseInt(timerInput.value) || 30;
+            soalTerjawab = false;
+            timerRunning = false;
+            loadSoalKeForm();
+            kirimUpdate();
+            statusKontrol.textContent = `📦 Beralih ke paket ${paketAktif} (${paketBaru ? paketBaru.length : 0} soal)`;
+        });
+
+        // ======================== CHECKBOX EVENT ========================
+        chkSoal.addEventListener('change', kirimUpdate);
+        chkKunci.addEventListener('change', kirimUpdate);
+        chkTimer.addEventListener('change', kirimUpdate);
+        chkSkor.addEventListener('change', kirimUpdate);
+        chkPaket.addEventListener('change', kirimUpdate);
+        chkHistori.addEventListener('change', kirimUpdate);
+
+        // ======================== SHORTCUT KEYBOARD ========================
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                updateSoalFromForm();
+            }
+            if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+                e.preventDefault();
+                mulaiTimer();
+            }
+        });
+
+        // ======================== EVENT LISTENERS ========================
+        $('btnUpdateSoal').addEventListener('click', updateSoalFromForm);
+        $('btnMulaiTimer').addEventListener('click', mulaiTimer);
+        $('btnPrevSoal').addEventListener('click', prevSoal);
+        $('btnNextSoal').addEventListener('click', nextSoal);
+        $('btnResetSoal').addEventListener('click', resetSoal);
+        $('btnResetKeAwal').addEventListener('click', resetKeAwal);
+        $('btnHapusSoal').addEventListener('click', hapusSoal);
+        $('btnHapusSemuaSoal').addEventListener('click', hapusSemuaSoal);
+        $('btnResetSkor').addEventListener('click', resetSkor);
+        $('btnTambahTim').addEventListener('click', tambahTim);
+        $('btnToggleHistori').addEventListener('click', toggleHistori);
+        $('btnHapusHistori').addEventListener('click', hapusHistori);
+        $('btnKirimSemua').addEventListener('click', () => {
+            const tempPertanyaan = pertanyaanInput.value.trim() || '';
+            const tempKunci = kunciInput.value.trim() || '';
+            if (tempPertanyaan !== '') {
+                pertanyaan = tempPertanyaan;
+                kunciJawaban = tempKunci;
+                const paket = paketSoal[paketAktif];
+                if (paket && paket.length > 0) {
+                    paket[soalIndex].pertanyaan = tempPertanyaan;
+                    paket[soalIndex].kunci = tempKunci;
+                }
+            }
+            kirimUpdate();
+            statusKontrol.textContent = '📡 Update dikirim manual.';
+        });
+
+        // Insert gambar
+        $('btnInsertImage').addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                insertImageToTextarea(file);
+            }
+            e.target.value = '';
+        });
+
+        $('btnBackupPaket').addEventListener('click', backupPaket);
+        $('btnRestorePaket').addEventListener('click', () => restoreInput.click());
+        restoreInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                restorePaket(file);
+            }
+            e.target.value = '';
+        });
+
+        // ======================== INISIALISASI ========================
+        PAKET_IDS.forEach(p => paketSoal[p] = []);
+
+        chkSoal.checked = false;
+        chkKunci.checked = false;
+        chkTimer.checked = false;
+        chkSkor.checked = false;
+        chkPaket.checked = false;
+        chkHistori.checked = false;
+
+        tampilkan = {
+            soal: false,
+            kunci: false,
+            timer: false,
+            skor: false,
+            paket: false,
+            histori: false
+        };
+
+        renderTim();
+        loadSoalKeForm();
+        kirimUpdate();
+        updateIndikator();
+    </script>
 </body>
 </html>
